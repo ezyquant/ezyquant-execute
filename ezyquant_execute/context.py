@@ -85,13 +85,8 @@ class ExecuteContext:
     Backtesting Context
     """
 
-    @property
-    def close_price(self) -> float:
-        """Close price from settrade open api."""
-        return self.market_price
-
-    def buy_pct_port(self, pct_port: float) -> float:
-        """Calculate buy volume from the percentage of the portfolio.
+    def buy_pct_port(self, pct_port: float) -> dict:
+        """Buy from the percentage of the portfolio. calculate the buy volume by pct_port * port_value / best ask price.
 
         Parameters
         ----------
@@ -105,8 +100,8 @@ class ExecuteContext:
         """
         return self.buy_value(self.port_value * pct_port)
 
-    def buy_value(self, value: float) -> float:
-        """Calculate buy volume from the given value.
+    def buy_value(self, value: float) -> dict:
+        """Buy from the given value. calculate the buy volume by value / best ask price.
 
         Parameters
         ----------
@@ -118,25 +113,9 @@ class ExecuteContext:
         float
             buy volume, always positive, not round 100
         """
-        return value / self.close_price
 
-    def buy_pct_position(self, pct_position: float) -> float:
-        """Calculate buy volume from the percentage of the current position.
-
-        Parameters
-        ----------
-        pct_position: float
-            percentage of position
-
-        Returns
-        -------
-        float
-            buy volume, always positive, not round 100
-        """
-        return pct_position * self.volume
-
-    def sell_pct_port(self, pct_port: float) -> float:
-        """Calculate sell volume from the percentage of the portfolio.
+    def sell_pct_port(self, pct_port: float) -> dict:
+        """Sell from the percentage of the portfolio. calculate the sell volume by pct_port * port_value / best ask price.
         Parameters
         ----------
         pct_port: float
@@ -147,10 +126,10 @@ class ExecuteContext:
         float
             sell volume, always negative, not round 100
         """
-        return self.buy_pct_port(-pct_port)
+        return self.sell_value(self.port_value * pct_port)
 
-    def sell_value(self, value: float) -> float:
-        """Calculate sell volume from the given value.
+    def sell_value(self, value: float) -> dict:
+        """Sell from the given value. calculate the sell volume by value / best bid price.
 
         Parameters
         ----------
@@ -162,26 +141,11 @@ class ExecuteContext:
         float
             sell volume, always negative, not round 100
         """
-        return self.buy_value(-value)
 
-    def sell_pct_position(self, pct_position: float) -> float:
-        """Calculate sell volume from the percentage of the current position.
-
-        Parameters
-        ----------
-        pct_position: float
-            percentage of position
-
-        Returns
-        -------
-        float
-            sell volume, always negative, not round 100
-        """
-        return self.buy_pct_position(-pct_position)
-
-    def target_pct_port(self, pct_port: float) -> float:
-        """Calculate buy/sell volume to make the current position reach the
-        target percentage of the portfolio.
+    def target_pct_port(self, pct_port: float) -> dict:
+        """Buy/Sell to make the current position reach the target percentage of
+        the portfolio. Calculate the buy/sell volume by compare between the
+        best bid/ask price.
 
         Parameters
         ----------
@@ -193,11 +157,12 @@ class ExecuteContext:
         float
             buy/sell volume, not round 100
         """
-        return self.buy_pct_port(pct_port) - self.volume
+        return self.target_value(self.port_value * pct_port)
 
-    def target_value(self, value: float) -> float:
-        """Calculate buy/sell volume to make the current position reach the
-        target value.
+    def target_value(self, value: float) -> dict:
+        """Buy/Sell to make the current position reach the target value.
+        Calculate the buy/sell volume by compare between the best bid/ask
+        price.
 
         Parameters
         ----------
@@ -209,7 +174,6 @@ class ExecuteContext:
         float
             buy/sell volume, not round 100
         """
-        return self.buy_value(value) - self.volume
 
     """
     Settrade Open API functions
