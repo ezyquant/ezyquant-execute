@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from threading import Event
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
+from settrade_v2.equity import InvestorEquity
 from settrade_v2.market import MarketData
 from settrade_v2.user import Investor
 
@@ -27,6 +28,10 @@ class ExecuteContext:
         """Current timestamp."""
         return pd.Timestamp.now()
 
+    """
+    Price functions
+    """
+
     @property
     def market_price(self) -> float:
         """Market price from settrade open api."""
@@ -46,6 +51,10 @@ class ExecuteContext:
 
         return 0.0 if no position.
         """
+
+    """
+    Position functions
+    """
 
     @property
     def volume(self) -> float:
@@ -67,27 +76,61 @@ class ExecuteContext:
     def port_value(self) -> float:
         """Total portfolio value."""
 
-    def buy(self):
-        pass
-
-    def sell(self):
-        pass
-
-    def cancel_all_orders(self):
-        pass
-
-    def cancel_all_buy_orders(self):
-        pass
-
-    def cancel_all_sell_orders(self):
-        pass
-
-    def cancel_orders_by_price(self, price: float):
-        pass
-
     """
-    Backtesting Context
+    Place order functions
     """
+
+    def buy(
+        self,
+        volume: int,
+        price: float,
+        qty_open: int = 0,
+        trustee_id_type: str = "Local",
+        price_type: str = "Limit",
+        validity_type: str = "Day",
+        bypass_warning: Optional[bool] = None,
+        valid_till_date: Optional[str] = None,
+    ) -> dict:
+        """Place buy order."""
+        return self._settrade_equity.place_order(
+            pin=self.pin,
+            side="buy",
+            symbol=self.symbol,
+            volume=volume,
+            price=price,
+            qty_open=qty_open,
+            trustee_id_type=trustee_id_type,
+            price_type=price_type,
+            validity_type=validity_type,
+            bypass_warning=bypass_warning,
+            valid_till_date=valid_till_date,
+        )
+
+    def sell(
+        self,
+        volume: int,
+        price: float,
+        qty_open: int = 0,
+        trustee_id_type: str = "Local",
+        price_type: str = "Limit",
+        validity_type: str = "Day",
+        bypass_warning: Optional[bool] = None,
+        valid_till_date: Optional[str] = None,
+    ) -> dict:
+        """Place sell order."""
+        return self._settrade_equity.place_order(
+            pin=self.pin,
+            side="sell",
+            symbol=self.symbol,
+            volume=volume,
+            price=price,
+            qty_open=qty_open,
+            trustee_id_type=trustee_id_type,
+            price_type=price_type,
+            validity_type=validity_type,
+            bypass_warning=bypass_warning,
+            valid_till_date=valid_till_date,
+        )
 
     def buy_pct_port(self, pct_port: float) -> dict:
         """Buy from the percentage of the portfolio. calculate the buy volume by pct_port * port_value / best ask price.
@@ -105,7 +148,8 @@ class ExecuteContext:
         return self.buy_value(self.port_value * pct_port)
 
     def buy_value(self, value: float) -> dict:
-        """Buy from the given value. calculate the buy volume by value / best ask price.
+        """Buy from the given value. calculate the buy volume by value / best
+        ask price.
 
         Parameters
         ----------
@@ -133,7 +177,8 @@ class ExecuteContext:
         return self.sell_value(self.port_value * pct_port)
 
     def sell_value(self, value: float) -> dict:
-        """Sell from the given value. calculate the sell volume by value / best bid price.
+        """Sell from the given value. calculate the sell volume by value / best
+        bid price.
 
         Parameters
         ----------
@@ -180,12 +225,37 @@ class ExecuteContext:
         """
 
     """
+    Cancel order functions
+    """
+
+    def cancel_all_orders(self) -> dict:
+        """Cancel all orders with the same symbol."""
+        orders = self._settrade_equity.get_orders()
+        order_no_list = [order["order_id"] for order in orders]
+        return self._settrade_equity.cancel_orders(
+            order_no_list=order_no_list, pin=self.pin
+        )
+
+    def cancel_all_buy_orders(self):
+        """Cancel all buy orders with the same symbol."""
+
+    def cancel_all_sell_orders(self):
+        """Cancel all sell orders with the same symbol."""
+
+    def cancel_orders_by_price(self, price: float):
+        """Cancel all orders with the same symbol and price."""
+
+    """
     Settrade Open API functions
     """
 
     @property
     def _settrade_market_data(self) -> MarketData:
         return self.settrade_user.MarketData()
+
+    @property
+    def _settrade_equity(self) -> InvestorEquity:
+        return self.settrade_user.Equity(account_no=self.account_no)
 
     def get_candlestick_df(self, limit: int = 5) -> pd.DataFrame:
         """Get candlestick data from settrade open api.
