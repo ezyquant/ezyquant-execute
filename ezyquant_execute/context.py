@@ -16,7 +16,7 @@ class ExecuteContext:
     settrade_user: Investor
     """Settrade user."""
     event: Event
-    """Event object to stop execute algorithm."""
+    """Event object to stop on timer."""
 
     @property
     def ts(self) -> pd.Timestamp:

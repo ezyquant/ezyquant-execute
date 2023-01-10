@@ -8,18 +8,18 @@ from . import utils
 from .context import ExecuteContext
 
 
-def execute(
+def execute_on_timer(
     settrade_user: Investor,
     signal_dict: Dict[str, Any],
-    execute_algorithm: Callable[[ExecuteContext], None],
+    on_timer: Callable[[ExecuteContext], None],
     interval: float,
     start_time: time,
     end_time: time,
 ):
     """Execute.
 
-    To stop execute algorithm,
-    raise exception in execute_algorithm to stop immediately,
+    To stop execute on timer,
+    raise exception in on_timer to stop immediately,
     or set event.set() to stop after current iteration.
 
     Parameters
@@ -27,16 +27,16 @@ def execute(
     settrade_user : Investor
         settrade sdk user.
     signal_dict : Dict[str, Any]
-        signal dictionary. symbol as key and signal as value. this signal will pass to execute_algorithm.
-    execute_algorithm : Callable[[ExecuteContext], None]
-        custom algorithm that iterate all symbol in signal_dict.
-        if execute_algorithm raise exception, this function will be stopped.
+        signal dictionary. symbol as key and signal as value. this signal will pass to on_timer.
+    on_timer : Callable[[ExecuteContext], None]
+        custom function that iterate all symbol in signal_dict.
+        if on_timer raise exception, this function will be stopped.
     interval : float
         seconds to sleep between each iteration.
     start_time : time
-        time to start execute algorithm.
+        time to start.
     end_time : time
-        time to end execute algorithm. end time will not interrupt while iteration.
+        time to end. end time will not interrupt while iteration.
     """
     # sleep until start time
     utils.sleep_until(start_time)
@@ -46,11 +46,10 @@ def execute(
     timer.start()
 
     try:
-        # execute algorithm
+        # execute on_timer
         while not event.wait(interval):
             for k, v in signal_dict.items():
-                # TODO: init ExecuteContext
-                execute_algorithm(
+                on_timer(
                     ExecuteContext(
                         symbol=k, signal=v, settrade_user=settrade_user, event=event
                     )
