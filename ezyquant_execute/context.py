@@ -1,14 +1,22 @@
 from dataclasses import dataclass
-from typing import Optional
+from threading import Event
+from typing import Any
 
 import pandas as pd
-from ezyquant.backtesting import Context
 from settrade_v2.user import Investor
 
 
+# TODO: inherit from ezyquant.backtesting import Context
 @dataclass
-class ExecuteContext(Context):
-    settrade_user: Optional[Investor] = None  # TODO: remove optional
+class ExecuteContext:
+    settrade_user: Investor
+    """Settrade user."""
+    event: Event
+    """Event object to stop execute algorithm."""
+    symbol: str
+    """Selected symbol."""
+    signal: Any
+    """Signal."""
 
     @property
     def ts(self) -> pd.Timestamp:

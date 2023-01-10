@@ -2,7 +2,6 @@ from datetime import time
 from threading import Event, Timer
 from typing import Any, Callable, Dict
 
-import pandas as pd
 from settrade_v2.user import Investor
 
 from . import utils
@@ -19,6 +18,10 @@ def execute(
 ):
     """Execute.
 
+    To stop execute algorithm,
+    raise exception in execute_algorithm to stop immediately,
+    or set event.set() to stop after current iteration.
+
     Parameters
     ----------
     settrade_user : Investor
@@ -29,11 +32,11 @@ def execute(
         custom algorithm that iterate all symbol in signal_dict.
         if execute_algorithm raise exception, this function will be stopped.
     interval : float
-        seconds to sleep between each interval.
+        seconds to sleep between each iteration.
     start_time : time
         time to start execute algorithm.
     end_time : time
-        time to end execute algorithm. end time will not interrupt execute_algorithm.
+        time to end execute algorithm. end time will not interrupt while iteration.
     """
     # sleep until start time
     utils.sleep_until(start_time)
@@ -49,10 +52,7 @@ def execute(
                 # TODO: init ExecuteContext
                 execute_algorithm(
                     ExecuteContext(
-                        settrade_user=settrade_user,
-                        symbol=k,
-                        signal=v,
-                        ts=pd.Timestamp.now(),
+                        settrade_user=settrade_user, event=event, symbol=k, signal=v
                     )
                 )
     finally:
