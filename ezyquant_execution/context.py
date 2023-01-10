@@ -15,6 +15,10 @@ class ExecuteContext:
     """Signal."""
     settrade_user: Investor
     """Settrade user."""
+    account_no: str
+    """Account number."""
+    pin: str
+    """PIN."""
     event: Event
     """Event object to stop on timer."""
 

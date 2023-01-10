@@ -50,6 +50,8 @@ class TestExecuting:
 
         execute_on_timer(
             settrade_user=ANY,
+            account_no=ANY,
+            pin=ANY,
             signal_dict=signal_dict,
             on_timer=on_timer,
             interval=interval,
@@ -62,5 +64,12 @@ class TestExecuting:
                 on_timer.assert_not_called()
             for k, v in signal_dict.items():
                 on_timer.assert_any_call(
-                    ExecuteContext(settrade_user=ANY, event=ANY, symbol=k, signal=v)
+                    ExecuteContext(
+                        settrade_user=ANY,
+                        account_no=ANY,
+                        pin=ANY,
+                        event=ANY,
+                        symbol=k,
+                        signal=v,
+                    )
                 )

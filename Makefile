@@ -12,9 +12,9 @@ format:
 	isort .
 	black .
 
-	docformatter -i ezyquant_execute/context.py
-	docformatter -i ezyquant_execute/executing.py
-	docformatter -i ezyquant_execute/utils.py
+	docformatter -i ezyquant_execution/context.py
+	docformatter -i ezyquant_execution/executing.py
+	docformatter -i ezyquant_execution/utils.py
 
 .PHONY: venv
 venv:

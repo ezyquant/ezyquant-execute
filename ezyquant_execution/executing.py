@@ -10,6 +10,8 @@ from .context import ExecuteContext
 
 def execute_on_timer(
     settrade_user: Investor,
+    account_no: str,
+    pin: str,
     signal_dict: Dict[str, Any],
     on_timer: Callable[[ExecuteContext], None],
     interval: float,
@@ -51,7 +53,12 @@ def execute_on_timer(
             for k, v in signal_dict.items():
                 on_timer(
                     ExecuteContext(
-                        symbol=k, signal=v, settrade_user=settrade_user, event=event
+                        symbol=k,
+                        signal=v,
+                        settrade_user=settrade_user,
+                        account_no=account_no,
+                        pin=pin,
+                        event=event,
                     )
                 )
     finally:
