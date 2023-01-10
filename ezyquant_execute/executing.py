@@ -2,6 +2,7 @@ from datetime import time
 from threading import Event, Timer
 from typing import Any, Callable, Dict
 
+import pandas as pd
 from settrade_v2.user import Investor
 
 from . import utils
@@ -26,6 +27,7 @@ def execute(
         signal dictionary. symbol as key and signal as value. this signal will pass to execute_algorithm.
     execute_algorithm : Callable[[ExecuteContext], None]
         custom algorithm that iterate all symbol in signal_dict.
+        if execute_algorithm raise exception, this function will be stopped.
     interval : float
         seconds to sleep between each interval.
     start_time : time
@@ -46,7 +48,12 @@ def execute(
             for k, v in signal_dict.items():
                 # TODO: init ExecuteContext
                 execute_algorithm(
-                    ExecuteContext(settrade_user=settrade_user, simybol=k, signal=v)
+                    ExecuteContext(
+                        settrade_user=settrade_user,
+                        symbol=k,
+                        signal=v,
+                        ts=pd.Timestamp.now(),
+                    )
                 )
     finally:
         # note that event.set() and timer.cancel() can be called multiple times

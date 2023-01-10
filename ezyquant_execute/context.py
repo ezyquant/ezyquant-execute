@@ -1,9 +1,19 @@
+from dataclasses import dataclass
+from typing import Optional
+
+import pandas as pd
 from ezyquant.backtesting import Context
 from settrade_v2.user import Investor
 
 
+@dataclass
 class ExecuteContext(Context):
-    settrade_user: Investor
+    settrade_user: Optional[Investor] = None  # TODO: remove optional
+
+    @property
+    def ts(self) -> pd.Timestamp:
+        """Current timestamp."""
+        return pd.Timestamp.now()
 
     @property
     def market_price(self):

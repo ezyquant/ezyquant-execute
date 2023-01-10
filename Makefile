@@ -13,6 +13,8 @@ format:
 	black .
 
 	docformatter -i ezyquant_execute/context.py
+	docformatter -i ezyquant_execute/executing.py
+	docformatter -i ezyquant_execute/utils.py
 
 .PHONY: venv
 venv:
