@@ -52,7 +52,7 @@ def execute(
                 # TODO: init ExecuteContext
                 execute_algorithm(
                     ExecuteContext(
-                        settrade_user=settrade_user, event=event, symbol=k, signal=v
+                        symbol=k, signal=v, settrade_user=settrade_user, event=event
                     )
                 )
     finally:
