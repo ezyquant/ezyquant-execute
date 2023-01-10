@@ -4,8 +4,8 @@ from unittest.mock import ANY, Mock
 
 import pytest
 
-from ezyquant_execute.context import ExecuteContext
-from ezyquant_execute.executing import execute_on_timer
+from ezyquant_execution.context import ExecuteContext
+from ezyquant_execution.executing import execute_on_timer
 
 
 class TestExecuting:
