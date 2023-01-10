@@ -1,9 +1,10 @@
-import time as t
 from datetime import time
+from threading import Event, Timer
 from typing import Any, Callable, Dict
 
 from settrade_v2.user import Investor
 
+from . import utils
 from .context import ExecuteContext
 
 
@@ -32,16 +33,22 @@ def execute(
     end_time : time
         time to end execute algorithm. end time will not interrupt execute_algorithm.
     """
-    # TODO: execute
-
     # sleep until start time
-    t.sleep((start_time - t.localtime()).seconds)
+    utils.sleep_until(start_time)
 
-    # execute algorithm
-    while t.localtime() < end_time:
-        for k, v in signal_dict.items():
-            execute_algorithm(
-                ExecuteContext(settrade_user=settrade_user, simybol=k, signal=v)
-            )
-        # TODO: interrupt sleep
-        t.sleep(interval)
+    event = Event()
+    timer = Timer(utils.seconds_until(end_time), event.set)
+    timer.start()
+
+    try:
+        # execute algorithm
+        while not event.wait(interval):
+            for k, v in signal_dict.items():
+                # TODO: init ExecuteContext
+                execute_algorithm(
+                    ExecuteContext(settrade_user=settrade_user, simybol=k, signal=v)
+                )
+    finally:
+        # note that event.set() and timer.cancel() can be called multiple times
+        event.set()
+        timer.cancel()
