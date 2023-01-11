@@ -9,6 +9,7 @@ from settrade_v2.market import MarketData
 from settrade_v2.realtime import RealtimeDataConnection
 from settrade_v2.user import Investor
 
+from . import utils
 from .entity import SIDE_BUY, SIDE_SELL
 from .realtime import BidOfferSubscriber
 
@@ -119,7 +120,7 @@ class ExecuteContext:
 
     def buy(
         self,
-        volume: int,
+        volume: float,
         price: float,
         qty_open: int = 0,
         trustee_id_type: str = "Local",
@@ -129,6 +130,9 @@ class ExecuteContext:
         valid_till_date: Optional[str] = None,
     ) -> dict:
         """Place buy order."""
+        volume = utils.round_down_100(volume)
+        if volume == 0:
+            return {}
         return self._settrade_equity.place_order(
             pin=self.pin,
             side=SIDE_BUY,
@@ -145,7 +149,7 @@ class ExecuteContext:
 
     def sell(
         self,
-        volume: int,
+        volume: float,
         price: float,
         qty_open: int = 0,
         trustee_id_type: str = "Local",
@@ -155,6 +159,9 @@ class ExecuteContext:
         valid_till_date: Optional[str] = None,
     ) -> dict:
         """Place sell order."""
+        volume = utils.round_down_100(volume)
+        if volume == 0:
+            return {}
         return self._settrade_equity.place_order(
             pin=self.pin,
             side=SIDE_SELL,
@@ -176,11 +183,6 @@ class ExecuteContext:
         ----------
         pct_port: float
             percentage of the portfolio
-
-        Returns
-        -------
-        float
-            buy volume, always positive, not round 100
         """
         return self.buy_value(self.port_value * pct_port)
 
@@ -192,12 +194,10 @@ class ExecuteContext:
         ----------
         value: float
             value
-
-        Returns
-        -------
-        float
-            buy volume, always positive, not round 100
         """
+        price = self.best_ask_price
+        volume = value / price
+        return self.buy(volume=volume, price=price)
 
     def sell_pct_port(self, pct_port: float) -> dict:
         """Sell from the percentage of the portfolio. calculate the sell volume by pct_port * port_value / best ask price.
@@ -205,11 +205,6 @@ class ExecuteContext:
         ----------
         pct_port: float
             percentage of the portfolio
-
-        Returns
-        -------
-        float
-            sell volume, always negative, not round 100
         """
         return self.sell_value(self.port_value * pct_port)
 
@@ -221,12 +216,10 @@ class ExecuteContext:
         ----------
         value: float
             value
-
-        Returns
-        -------
-        float
-            sell volume, always negative, not round 100
         """
+        price = self.best_bid_price
+        volume = value / price
+        return self.sell(volume=volume, price=price)
 
     def target_pct_port(self, pct_port: float) -> dict:
         """Buy/Sell to make the current position reach the target percentage of
@@ -237,11 +230,6 @@ class ExecuteContext:
         ----------
         pct_port: float
             percentage of the portfolio
-
-        Returns
-        -------
-        float
-            buy/sell volume, not round 100
         """
         return self.target_value(self.port_value * pct_port)
 
@@ -254,12 +242,13 @@ class ExecuteContext:
         ----------
         value: float
             value
-
-        Returns
-        -------
-        float
-            buy/sell volume, not round 100
         """
+        value -= self.market_value
+
+        if value > 0:
+            return self.buy_value(value)
+        else:
+            return self.sell_value(-value)
 
     """
     Cancel order functions
@@ -363,4 +352,4 @@ class ExecuteContext:
         for i in ports["portfolioList"]:
             if i["symbol"] == self.symbol:
                 return i
-        return dict()
+        return {}
