@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from threading import Event
-from typing import Any, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import pandas as pd
 from settrade_v2.equity import InvestorEquity
@@ -59,10 +59,22 @@ class ExecuteContext:
     @property
     def volume(self) -> float:
         """Current volume."""
+        port = self.get_portfolios()
+        volume = 0
+        for i in port:
+            if i["symbol"] == self.symbol:
+                volume = i["volume"]
+        return volume
 
     @property
-    def cash(self) -> float:
-        """Available cash."""
+    def line_available(self) -> float:
+        """Line Available."""
+        return self._settrade_equity.get_account_info()["lineAvailable"]
+
+    @property
+    def cash_balance(self) -> float:
+        """Cash Balance."""
+        return self._settrade_equity.get_account_info()["cashBalance"]
 
     @property
     def total_cost_value(self) -> float:
@@ -71,6 +83,7 @@ class ExecuteContext:
     @property
     def total_market_value(self) -> float:
         """Sum of all stock cost value in portfolio."""
+        return self._settrade_equity.get_account_info()["equityBalance"]
 
     @property
     def port_value(self) -> float:
@@ -230,20 +243,45 @@ class ExecuteContext:
 
     def cancel_all_orders(self) -> dict:
         """Cancel all orders with the same symbol."""
-        orders = self._settrade_equity.get_orders()
-        order_no_list = [order["order_id"] for order in orders]
-        return self._settrade_equity.cancel_orders(
-            order_no_list=order_no_list, pin=self.pin
-        )
+        return self._cancel_orders(lambda x: True)
 
     def cancel_all_buy_orders(self):
         """Cancel all buy orders with the same symbol."""
+        return self._cancel_orders(lambda x: x["side"].upper() == "BUY")
 
     def cancel_all_sell_orders(self):
         """Cancel all sell orders with the same symbol."""
+        return self._cancel_orders(lambda x: x["side"].upper() == "SELL")
 
     def cancel_orders_by_price(self, price: float):
         """Cancel all orders with the same symbol and price."""
+        return self._cancel_orders(lambda x: x["price"] == price)
+
+    def _cancel_orders(self, condition: Callable[[dict], bool]) -> dict:
+        """Cancel orders which meet the condition.
+
+        Parameters
+        ----------
+        condition: Callable[[dict], bool]
+            condition function
+
+        Returns
+        -------
+        dict
+            cancel order result
+        """
+        orders = self._settrade_equity.get_orders()
+        order_no_list = [
+            i["order_id"]
+            for i in orders
+            if condition(i) and i["symbol"] == self.symbol and i["canCancel"] == True
+        ]
+
+        if len(order_no_list) == 0:
+            return {}
+        return self._settrade_equity.cancel_orders(
+            order_no_list=order_no_list, pin=self.pin
+        )
 
     """
     Settrade Open API functions
@@ -275,3 +313,11 @@ class ExecuteContext:
     def get_quote_symbol(self) -> dict:
         """Get quote symbol from settrade open api."""
         return self._settrade_market_data.get_quote_symbol(symbol=self.symbol)
+
+    def get_account_info(self) -> Dict[str, Any]:
+        """Get account info from settrade open api."""
+        return self._settrade_equity.get_account_info()
+
+    def get_portfolios(self) -> List[Dict[str, Any]]:
+        """Get portfolio from settrade open api."""
+        return self._settrade_equity.get_portfolios()
