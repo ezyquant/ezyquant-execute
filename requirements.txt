@@ -1,5 +1,5 @@
-pandas
-settrade-v2
+pandas>=1.3
+settrade-v2==2.1.2
 
 # Dev
 pytest>=7,<8
