@@ -1,4 +1,3 @@
-ezyquant
 settrade-v2
 
 # Dev
