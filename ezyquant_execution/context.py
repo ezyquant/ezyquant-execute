@@ -7,6 +7,8 @@ from settrade_v2.equity import InvestorEquity
 from settrade_v2.market import MarketData
 from settrade_v2.user import Investor
 
+from .entity import SIDE_BUY, SIDE_SELL
+
 
 @dataclass
 class ExecuteContext:
@@ -72,6 +74,11 @@ class ExecuteContext:
         return self._settrade_equity.get_account_info()["lineAvailable"]
 
     @property
+    def cash(self) -> float:
+        """Line Available."""
+        return self.line_available
+
+    @property
     def cash_balance(self) -> float:
         """Cash Balance."""
         return self._settrade_equity.get_account_info()["cashBalance"]
@@ -107,7 +114,7 @@ class ExecuteContext:
         """Place buy order."""
         return self._settrade_equity.place_order(
             pin=self.pin,
-            side="buy",
+            side=SIDE_BUY,
             symbol=self.symbol,
             volume=volume,
             price=price,
@@ -133,7 +140,7 @@ class ExecuteContext:
         """Place sell order."""
         return self._settrade_equity.place_order(
             pin=self.pin,
-            side="sell",
+            side=SIDE_SELL,
             symbol=self.symbol,
             volume=volume,
             price=price,
@@ -247,11 +254,11 @@ class ExecuteContext:
 
     def cancel_all_buy_orders(self):
         """Cancel all buy orders with the same symbol."""
-        return self._cancel_orders(lambda x: x["side"].upper() == "BUY")
+        return self._cancel_orders(lambda x: x["side"].upper() == SIDE_BUY)
 
     def cancel_all_sell_orders(self):
         """Cancel all sell orders with the same symbol."""
-        return self._cancel_orders(lambda x: x["side"].upper() == "SELL")
+        return self._cancel_orders(lambda x: x["side"].upper() == SIDE_SELL)
 
     def cancel_orders_by_price(self, price: float):
         """Cancel all orders with the same symbol and price."""

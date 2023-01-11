@@ -1,3 +1,4 @@
+pandas
 settrade-v2
 
 # Dev
