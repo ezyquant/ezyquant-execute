@@ -1,13 +1,16 @@
 from dataclasses import dataclass
+from functools import cached_property
 from threading import Event
 from typing import Any, Callable, Dict, List, Optional
 
 import pandas as pd
 from settrade_v2.equity import InvestorEquity
 from settrade_v2.market import MarketData
+from settrade_v2.realtime import RealtimeDataConnection
 from settrade_v2.user import Investor
 
 from .entity import SIDE_BUY, SIDE_SELL
+from .realtime import BidOfferSubscriber
 
 
 @dataclass
@@ -42,10 +45,12 @@ class ExecuteContext:
     @property
     def best_bid_price(self) -> float:
         """Best bid price from settrade open api."""
+        return self._bo_sub.best_bid_price
 
     @property
     def best_ask_price(self) -> float:
         """Best ask price from settrade open api."""
+        return self._bo_sub.best_ask_price
 
     @property
     def cost_price(self) -> float:
@@ -295,13 +300,24 @@ class ExecuteContext:
     """
 
     @property
+    def _settrade_equity(self) -> InvestorEquity:
+        return self.settrade_user.Equity(account_no=self.account_no)
+
+    @property
     def _settrade_market_data(self) -> MarketData:
         return self.settrade_user.MarketData()
 
     @property
-    def _settrade_equity(self) -> InvestorEquity:
-        return self.settrade_user.Equity(account_no=self.account_no)
+    def _settrade_realtime_data_connection(self) -> RealtimeDataConnection:
+        return self.settrade_user.RealtimeDataConnection()
 
+    @cached_property
+    def _bo_sub(self) -> BidOfferSubscriber:
+        return BidOfferSubscriber(
+            symbol=self.symbol, rt_conn=self._settrade_realtime_data_connection
+        )
+
+    # TODO: remove if unused
     def get_candlestick_df(self, limit: int = 5) -> pd.DataFrame:
         """Get candlestick data from settrade open api.
 
