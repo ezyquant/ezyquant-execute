@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from functools import cached_property
 from threading import Event
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Optional
 
 import pandas as pd
 from settrade_v2.equity import InvestorEquity
@@ -39,49 +39,27 @@ class ExecuteContext:
 
     @property
     def market_price(self) -> float:
-        """Market price from settrade open api."""
+        """Market price."""
         return self.get_quote_symbol()["last"]
 
     @property
     def best_bid_price(self) -> float:
-        """Best bid price from settrade open api."""
+        """Best bid price."""
         return self._bo_sub.best_bid_price
 
     @property
     def best_ask_price(self) -> float:
-        """Best ask price from settrade open api."""
+        """Best ask price."""
         return self._bo_sub.best_ask_price
 
-    @property
-    def cost_price(self) -> float:
-        """Cost price.
-
-        return 0.0 if no position.
-        """
-
     """
-    Position functions
+    Account functions
     """
-
-    @property
-    def volume(self) -> float:
-        """Current volume."""
-        port = self.get_portfolios()
-        volume = 0
-        for i in port:
-            if i["symbol"] == self.symbol:
-                volume = i["volume"]
-        return volume
 
     @property
     def line_available(self) -> float:
         """Line Available."""
         return self._settrade_equity.get_account_info()["lineAvailable"]
-
-    @property
-    def cash(self) -> float:
-        """Line Available."""
-        return self.line_available
 
     @property
     def cash_balance(self) -> float:
@@ -91,15 +69,49 @@ class ExecuteContext:
     @property
     def total_cost_value(self) -> float:
         """Sum of all stock market value in portfolio."""
+        return self.get_portfolios()["totalPortfolio"]["amount"]
 
     @property
     def total_market_value(self) -> float:
         """Sum of all stock cost value in portfolio."""
-        return self._settrade_equity.get_account_info()["equityBalance"]
+        return self.get_portfolios()["totalPortfolio"]["marketValue"]
 
     @property
     def port_value(self) -> float:
         """Total portfolio value."""
+        return self.cash_balance + self.total_market_value
+
+    @property
+    def cash(self) -> float:
+        """Cash Balance."""
+        return self.cash_balance
+
+    """
+    Position functions
+    """
+
+    @property
+    def volume(self) -> int:
+        """Actual volume."""
+        return self.get_symbol_portfolio().get("actualVolume", 0)
+
+    @property
+    def cost_price(self) -> float:
+        """Cost price.
+
+        return 0.0 if no position.
+        """
+        return self.get_symbol_portfolio().get("averagePrice", 0.0)
+
+    @property
+    def cost_value(self) -> float:
+        """Cost value."""
+        return self.get_symbol_portfolio().get("amount", 0.0)
+
+    @property
+    def market_value(self) -> float:
+        """Market value of symbol in portfolio."""
+        return self.get_symbol_portfolio().get("marketValue", 0.0)
 
     """
     Place order functions
@@ -341,6 +353,14 @@ class ExecuteContext:
         """Get account info from settrade open api."""
         return self._settrade_equity.get_account_info()
 
-    def get_portfolios(self) -> List[Dict[str, Any]]:
+    def get_portfolios(self) -> Dict[str, Any]:
         """Get portfolio from settrade open api."""
-        return self._settrade_equity.get_portfolios()
+        return self._settrade_equity.get_portfolios()  # type: ignore
+
+    def get_symbol_portfolio(self) -> Dict[str, Any]:
+        """Get portfolio of the symbol from settrade open api."""
+        ports = self.get_portfolios()
+        for i in ports["portfolioList"]:
+            if i["symbol"] == self.symbol:
+                return i
+        return dict()
