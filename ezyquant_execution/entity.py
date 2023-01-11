@@ -3,8 +3,8 @@ from typing import List
 
 import pandas as pd
 
-SIDE_BUY = "BUY"
-SIDE_SELL = "SELL"
+SIDE_BUY = "Buy"
+SIDE_SELL = "Sell"
 
 # Market Section
 @dataclass

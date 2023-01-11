@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from functools import cached_property
 from threading import Event
 from typing import Any, Callable, Dict, Optional
@@ -30,9 +31,9 @@ class ExecuteContext:
     """Event object to stop on timer."""
 
     @property
-    def ts(self) -> pd.Timestamp:
+    def ts(self) -> datetime:
         """Current timestamp."""
-        return pd.Timestamp.now()
+        return datetime.now()
 
     """
     Price functions
@@ -60,12 +61,12 @@ class ExecuteContext:
     @property
     def line_available(self) -> float:
         """Line Available."""
-        return self._settrade_equity.get_account_info()["lineAvailable"]
+        return self.get_account_info()["lineAvailable"]
 
     @property
     def cash_balance(self) -> float:
         """Cash Balance."""
-        return self._settrade_equity.get_account_info()["cashBalance"]
+        return self.get_account_info()["cashBalance"]
 
     @property
     def total_cost_value(self) -> float:
@@ -126,7 +127,7 @@ class ExecuteContext:
         trustee_id_type: str = "Local",
         price_type: str = "Limit",
         validity_type: str = "Day",
-        bypass_warning: Optional[bool] = None,
+        bypass_warning: Optional[bool] = True,
         valid_till_date: Optional[str] = None,
     ) -> dict:
         """Place buy order."""
@@ -155,7 +156,7 @@ class ExecuteContext:
         trustee_id_type: str = "Local",
         price_type: str = "Limit",
         validity_type: str = "Day",
-        bypass_warning: Optional[bool] = None,
+        bypass_warning: Optional[bool] = True,
         valid_till_date: Optional[str] = None,
     ) -> dict:
         """Place sell order."""
@@ -260,11 +261,11 @@ class ExecuteContext:
 
     def cancel_all_buy_orders(self):
         """Cancel all buy orders with the same symbol."""
-        return self._cancel_orders(lambda x: x["side"].upper() == SIDE_BUY)
+        return self._cancel_orders(lambda x: x["side"].capitalize() == SIDE_BUY)
 
     def cancel_all_sell_orders(self):
         """Cancel all sell orders with the same symbol."""
-        return self._cancel_orders(lambda x: x["side"].upper() == SIDE_SELL)
+        return self._cancel_orders(lambda x: x["side"].capitalize() == SIDE_SELL)
 
     def cancel_orders_by_price(self, price: float):
         """Cancel all orders with the same symbol and price."""
@@ -285,7 +286,7 @@ class ExecuteContext:
         """
         orders = self._settrade_equity.get_orders()
         order_no_list = [
-            i["order_id"]
+            i["orderNo"]
             for i in orders
             if condition(i) and i["symbol"] == self.symbol and i["canCancel"] == True
         ]
@@ -320,7 +321,7 @@ class ExecuteContext:
 
     # TODO: remove if unused
     def get_candlestick_df(self, limit: int = 5) -> pd.DataFrame:
-        """Get candlestick data from settrade open api.
+        """Get candlestick data.
 
         Columns: ["lastSequence", "time", "open", "high", "low", "close", "volume", "value"]
         """
@@ -335,19 +336,19 @@ class ExecuteContext:
         return df
 
     def get_quote_symbol(self) -> dict:
-        """Get quote symbol from settrade open api."""
+        """Get quote symbol."""
         return self._settrade_market_data.get_quote_symbol(symbol=self.symbol)
 
     def get_account_info(self) -> Dict[str, Any]:
-        """Get account info from settrade open api."""
+        """Get account info."""
         return self._settrade_equity.get_account_info()
 
     def get_portfolios(self) -> Dict[str, Any]:
-        """Get portfolio from settrade open api."""
+        """Get portfolio."""
         return self._settrade_equity.get_portfolios()  # type: ignore
 
     def get_symbol_portfolio(self) -> Dict[str, Any]:
-        """Get portfolio of the symbol from settrade open api."""
+        """Get portfolio of the symbol."""
         ports = self.get_portfolios()
         for i in ports["portfolioList"]:
             if i["symbol"] == self.symbol:
