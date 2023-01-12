@@ -17,6 +17,8 @@ setup(
     name=NAME,
     packages=find_packages(include=["ezyquant_execution", "ezyquant_execution.*"]),
     version=verstr,
+    description="Ezyquant execution",
+    long_description="Ezyquant execution",
     author="Fintech (Thailand) Company Limited",
     author_email="admin@fintech.co.th",
     url="https://doc.ezyquant.com/",
