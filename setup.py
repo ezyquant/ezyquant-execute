@@ -21,7 +21,7 @@ setup(
     long_description="Ezyquant execution",
     author="Fintech (Thailand) Company Limited",
     author_email="admin@fintech.co.th",
-    url="https://doc.ezyquant.com/",
+    url="https://pydoc.ezyquant.com/",
     maintainer="Fintech (Thailand) Company Limited",
     maintainer_email="admin@fintech.co.th",
     python_requires=">=3.8",
@@ -33,7 +33,7 @@ setup(
         "License :: OSI Approved :: MIT License",
     ],
     project_urls={
-        "Documentation": "https://doc.ezyquant.com/",
+        "Documentation": "https://pydoc.ezyquant.com/",
         "Bug Reports": "https://github.com/ezyquant/ezyquant-execution/issues",
         "Source": "https://github.com/ezyquant/ezyquant-execution",
     },
