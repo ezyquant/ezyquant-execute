@@ -131,7 +131,7 @@ class ExecuteContext:
         valid_till_date: Optional[str] = None,
     ) -> dict:
         """Place buy order."""
-        volume = utils.round_down_100(volume)
+        volume = utils.round_100(volume)
         if volume == 0:
             return {}
         return self._settrade_equity.place_order(
@@ -160,7 +160,7 @@ class ExecuteContext:
         valid_till_date: Optional[str] = None,
     ) -> dict:
         """Place sell order."""
-        volume = utils.round_down_100(volume)
+        volume = utils.round_100(volume)
         if volume == 0:
             return {}
         return self._settrade_equity.place_order(

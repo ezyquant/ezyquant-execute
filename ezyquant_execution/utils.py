@@ -43,7 +43,7 @@ Round
 """
 
 
-def round_100(value: float, is_round_up: bool = True) -> int:
+def round_100(value: float, is_round_up: bool = False) -> int:
     """Round float to nearest 100.
 
     Parameters
@@ -66,7 +66,7 @@ def round_100(value: float, is_round_up: bool = True) -> int:
         return int(value // 100) * 100
 
 
-def round_even(value: float, is_round_up: bool = True) -> int:
+def round_even(value: float, is_round_up: bool = False) -> int:
     """Round float to nearest even.
 
     Parameters
@@ -114,7 +114,7 @@ def _price_array() -> np.ndarray:
 
 
 @lru_cache
-def match_tick_price(price: float, n_tick: int, is_round_up: bool = True) -> float:
+def match_tick_price(price: float, n_tick: int, is_round_up: bool = False) -> float:
     """Match price to tick price.
 
     Parameters
