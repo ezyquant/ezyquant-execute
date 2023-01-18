@@ -2,13 +2,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import cached_property
 from threading import Event
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Union
 
 import pandas as pd
-from settrade_v2.equity import InvestorEquity
+from settrade_v2.equity import InvestorEquity, MarketRepEquity
 from settrade_v2.market import MarketData
 from settrade_v2.realtime import RealtimeDataConnection
-from settrade_v2.user import Investor
+from settrade_v2.user import Investor, MarketRep
 
 from . import utils
 from .entity import SIDE_BUY, SIDE_SELL
@@ -21,14 +21,14 @@ class ExecuteContext:
     """Selected symbol."""
     signal: Any
     """Signal."""
-    settrade_user: Investor
+    settrade_user: Union[Investor, MarketRep]
     """Settrade user."""
     account_no: str
     """Account number."""
-    pin: str
-    """PIN."""
     event: Event
     """Event object to stop on timer."""
+    pin: Optional[str] = None
+    """PIN."""
 
     @property
     def ts(self) -> datetime:
@@ -135,7 +135,6 @@ class ExecuteContext:
         if volume == 0:
             return {}
         return self._settrade_equity.place_order(
-            pin=self.pin,
             side=SIDE_BUY,
             symbol=self.symbol,
             volume=volume,
@@ -146,6 +145,7 @@ class ExecuteContext:
             validity_type=validity_type,
             bypass_warning=bypass_warning,
             valid_till_date=valid_till_date,
+            **self._pin_or_account_no_kw
         )
 
     def sell(
@@ -164,7 +164,6 @@ class ExecuteContext:
         if volume == 0:
             return {}
         return self._settrade_equity.place_order(
-            pin=self.pin,
             side=SIDE_SELL,
             symbol=self.symbol,
             volume=volume,
@@ -175,6 +174,7 @@ class ExecuteContext:
             validity_type=validity_type,
             bypass_warning=bypass_warning,
             valid_till_date=valid_till_date,
+            **self._pin_or_account_no_kw
         )
 
     def buy_pct_port(self, pct_port: float) -> dict:
@@ -294,7 +294,7 @@ class ExecuteContext:
         if len(order_no_list) == 0:
             return {}
         return self._settrade_equity.cancel_orders(
-            order_no_list=order_no_list, pin=self.pin
+            order_no_list=order_no_list, **self._pin_or_account_no_kw
         )
 
     """
@@ -302,8 +302,29 @@ class ExecuteContext:
     """
 
     @property
-    def _settrade_equity(self) -> InvestorEquity:
-        return self.settrade_user.Equity(account_no=self.account_no)
+    def _account_no_kw(self) -> dict:
+        return (
+            {"accountNo": self.account_no}
+            if isinstance(self.settrade_user, MarketRep)
+            else {}
+        )
+
+    @property
+    def _pin_or_account_no_kw(self) -> dict:
+        return (
+            {"accountNo": self.account_no}
+            if isinstance(self.settrade_user, MarketRep)
+            else {"pin": self.pin}
+        )
+
+    @property
+    def _settrade_equity(self) -> Union[InvestorEquity, MarketRepEquity]:
+        kw = (
+            {"accountNo": self.account_no}
+            if isinstance(self.settrade_user, Investor)
+            else {}
+        )
+        return self.settrade_user.Equity(**kw)
 
     @property
     def _settrade_market_data(self) -> MarketData:
@@ -341,7 +362,7 @@ class ExecuteContext:
 
     def get_account_info(self) -> Dict[str, Any]:
         """Get account info."""
-        return self._settrade_equity.get_account_info()
+        return self._settrade_equity.get_account_info(**self._account_no_kw)
 
     def get_portfolios(self) -> Dict[str, Any]:
         """Get portfolio."""

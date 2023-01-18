@@ -1,23 +1,23 @@
 from datetime import time
 from threading import Event, Timer
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Optional, Union
 
-from settrade_v2.user import Investor
+from settrade_v2.user import Investor, MarketRep
 
 from . import utils
 from .context import ExecuteContext
 
 
 def execute_on_timer(
-    settrade_user: Investor,
+    settrade_user: Union[Investor, MarketRep],
     account_no: str,
-    pin: str,
     signal_dict: Dict[str, Any],
     on_timer: Callable[[ExecuteContext], None],
     interval: float,
     start_time: time,
     end_time: time,
-):
+    pin: Optional[str] = None,
+) -> Event:
     """Execute.
 
     To stop execute on timer,
@@ -28,6 +28,8 @@ def execute_on_timer(
     ----------
     settrade_user : Investor
         settrade sdk user.
+    account_no : str
+        account number.
     signal_dict : Dict[str, Any]
         signal dictionary. symbol as key and signal as value. this signal will pass to on_timer.
     on_timer : Callable[[ExecuteContext], None]
@@ -39,6 +41,13 @@ def execute_on_timer(
         time to start.
     end_time : time
         time to end. end time will not interrupt while iteration.
+    pin : str, optional
+        pin for investor
+
+    Returns
+    -------
+    Event
+        event to stop execute on timer.
     """
     # sleep until start time
     utils.sleep_until(start_time)
