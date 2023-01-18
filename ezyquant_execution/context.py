@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from functools import cached_property
 from threading import Event
@@ -29,6 +29,8 @@ class ExecuteContext:
     """Event object to stop on timer."""
     pin: Optional[str] = None
     """PIN."""
+    data: dict = field(default_factory=dict)
+    """Data dict for this context."""
 
     @property
     def ts(self) -> datetime:
@@ -145,7 +147,7 @@ class ExecuteContext:
             validity_type=validity_type,
             bypass_warning=bypass_warning,
             valid_till_date=valid_till_date,
-            **self._pin_or_account_no_kw
+            **self._pin_acc_no_kw
         )
 
     def sell(
@@ -174,7 +176,7 @@ class ExecuteContext:
             validity_type=validity_type,
             bypass_warning=bypass_warning,
             valid_till_date=valid_till_date,
-            **self._pin_or_account_no_kw
+            **self._pin_acc_no_kw
         )
 
     def buy_pct_port(self, pct_port: float) -> dict:
@@ -294,7 +296,7 @@ class ExecuteContext:
         if len(order_no_list) == 0:
             return {}
         return self._settrade_equity.cancel_orders(
-            order_no_list=order_no_list, **self._pin_or_account_no_kw
+            order_no_list=order_no_list, **self._pin_acc_no_kw
         )
 
     """
@@ -302,17 +304,17 @@ class ExecuteContext:
     """
 
     @property
-    def _account_no_kw(self) -> dict:
+    def _acc_no_kw(self) -> dict:
         return (
-            {"accountNo": self.account_no}
+            {"account_no": self.account_no}
             if isinstance(self.settrade_user, MarketRep)
             else {}
         )
 
     @property
-    def _pin_or_account_no_kw(self) -> dict:
+    def _pin_acc_no_kw(self) -> dict:
         return (
-            {"accountNo": self.account_no}
+            {"account_no": self.account_no}
             if isinstance(self.settrade_user, MarketRep)
             else {"pin": self.pin}
         )
@@ -320,7 +322,7 @@ class ExecuteContext:
     @property
     def _settrade_equity(self) -> Union[InvestorEquity, MarketRepEquity]:
         kw = (
-            {"accountNo": self.account_no}
+            {"account_no": self.account_no}
             if isinstance(self.settrade_user, Investor)
             else {}
         )
@@ -362,7 +364,7 @@ class ExecuteContext:
 
     def get_account_info(self) -> Dict[str, Any]:
         """Get account info."""
-        return self._settrade_equity.get_account_info(**self._account_no_kw)
+        return self._settrade_equity.get_account_info(**self._acc_no_kw)
 
     def get_portfolios(self) -> Dict[str, Any]:
         """Get portfolio."""
