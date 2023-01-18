@@ -48,7 +48,7 @@ class BidOffer:
         return pd.DataFrame(data)
 
     def __str__(self):
-        return self.dataframe.to_str()
+        return self.dataframe.to_string()
 
     @classmethod
     def from_dict(cls, data: dict):
