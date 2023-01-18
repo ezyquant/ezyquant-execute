@@ -96,6 +96,7 @@ Price
 
 @lru_cache(maxsize=1)
 def _price_array() -> np.ndarray:
+    # https://classic.set.or.th/en/products/trading/equity/tradingsystem_p5.html
     ranges = [
         (0.01, 2, 0.01),
         (2, 5, 0.02),
