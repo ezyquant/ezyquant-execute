@@ -78,34 +78,42 @@ class TestExecuteContext:
         print(result)
 
     def test_buy(self, exe_ctx: ExecuteContext):
+        exe_ctx.cancel_all_orders()
         result = exe_ctx.buy(volume=100, price=exe_ctx.market_price)
         print(result)
 
     def test_sell(self, exe_ctx: ExecuteContext):
+        exe_ctx.cancel_all_orders()
         result = exe_ctx.sell(volume=100, price=exe_ctx.market_price)
         print(result)
 
     def test_buy_pct_port(self, exe_ctx: ExecuteContext):
+        exe_ctx.cancel_all_orders()
         result = exe_ctx.buy_pct_port(0.1)
         print(result)
 
     def test_buy_value(self, exe_ctx: ExecuteContext):
+        exe_ctx.cancel_all_orders()
         result = exe_ctx.buy_value(1000)
         print(result)
 
     def test_sell_pct_port(self, exe_ctx: ExecuteContext):
+        exe_ctx.cancel_all_orders()
         result = exe_ctx.sell_pct_port(0.1)
         print(result)
 
     def test_sell_value(self, exe_ctx: ExecuteContext):
+        exe_ctx.cancel_all_orders()
         result = exe_ctx.sell_value(1000)
         print(result)
 
     def test_target_pct_port(self, exe_ctx: ExecuteContext):
+        exe_ctx.cancel_all_orders()
         result = exe_ctx.target_pct_port(0.1)
         print(result)
 
     def test_target_value(self, exe_ctx: ExecuteContext):
+        exe_ctx.cancel_all_orders()
         result = exe_ctx.target_value(1000)
         print(result)
 
