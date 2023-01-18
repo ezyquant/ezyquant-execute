@@ -141,6 +141,10 @@ class TestExecuteContext:
         result = exe_ctx.get_portfolios()
         print(result)
 
-    def test_get_symbol_portfolio(self, exe_ctx: ExecuteContext):
-        result = exe_ctx.get_symbol_portfolio()
+    def test_get_portfolio_symbol(self, exe_ctx: ExecuteContext):
+        result = exe_ctx.get_portfolio_symbol()
+        print(result)
+
+    def test_get_orders_symbol(self, exe_ctx: ExecuteContext):
+        result = exe_ctx.get_orders_symbol()
         print(result)

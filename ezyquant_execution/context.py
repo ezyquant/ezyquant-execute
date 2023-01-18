@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from functools import cached_property
 from threading import Event
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import pandas as pd
 from settrade_v2.equity import InvestorEquity, MarketRepEquity
@@ -11,7 +11,7 @@ from settrade_v2.realtime import RealtimeDataConnection
 from settrade_v2.user import Investor, MarketRep
 
 from . import utils
-from .entity import SIDE_BUY, SIDE_SELL
+from .entity import SIDE_BUY, SIDE_SELL, EquityOrder, EquityPortfolio
 from .realtime import BidOfferSubscriber
 
 
@@ -95,9 +95,10 @@ class ExecuteContext:
     """
 
     @property
-    def volume(self) -> int:
+    def volume(self) -> float:
         """Actual volume."""
-        return self.get_symbol_portfolio().get("actualVolume", 0)
+        ps = self.get_portfolio_symbol()
+        return ps.actual_volume if ps else 0
 
     @property
     def cost_price(self) -> float:
@@ -105,17 +106,20 @@ class ExecuteContext:
 
         return 0.0 if no position.
         """
-        return self.get_symbol_portfolio().get("averagePrice", 0.0)
+        ps = self.get_portfolio_symbol()
+        return ps.average_price if ps else 0.0
 
     @property
     def cost_value(self) -> float:
         """Cost value."""
-        return self.get_symbol_portfolio().get("amount", 0.0)
+        ps = self.get_portfolio_symbol()
+        return ps.amount if ps else 0.0
 
     @property
     def market_value(self) -> float:
         """Market value of symbol in portfolio."""
-        return self.get_symbol_portfolio().get("marketValue", 0.0)
+        ps = self.get_portfolio_symbol()
+        return ps.market_value if ps else 0.0
 
     """
     Place order functions
@@ -370,10 +374,17 @@ class ExecuteContext:
         """Get portfolio."""
         return self._settrade_equity.get_portfolios()  # type: ignore
 
-    def get_symbol_portfolio(self) -> Dict[str, Any]:
+    def get_portfolio_symbol(self) -> Optional[EquityPortfolio]:
         """Get portfolio of the symbol."""
         ports = self.get_portfolios()
         for i in ports["portfolioList"]:
             if i["symbol"] == self.symbol:
-                return i
-        return {}
+                return EquityPortfolio.from_camel_dict(i)
+        return None
+
+    def get_orders_symbol(self) -> List[EquityOrder]:
+        """Get order of the symbol."""
+        orders = self._settrade_equity.get_orders()
+        orders = [EquityOrder.from_camel_dict(i) for i in orders]
+        orders = [i for i in orders if i.symbol == self.symbol]
+        return orders

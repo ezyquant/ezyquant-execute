@@ -1,4 +1,5 @@
 import math
+import re
 import time as t
 from datetime import datetime, time
 from functools import lru_cache
@@ -173,3 +174,13 @@ def match_tick_price_sell(price: float, n_tick: int) -> float:
     return match_tick_price(price=price, n_tick=-n_tick, is_round_up=False)
     """
     return match_tick_price(price=price, n_tick=-n_tick, is_round_up=False)
+
+
+"""
+String
+"""
+
+
+def camel_to_snake(name):
+    name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
