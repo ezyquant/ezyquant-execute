@@ -17,6 +17,7 @@ def execute_on_timer(
     start_time: time,
     end_time: time,
     pin: Optional[str] = None,
+    event: Optional[Event] = None,
 ):
     """Execute.
 
@@ -43,11 +44,15 @@ def execute_on_timer(
         time to end. end time will not interrupt while iteration.
     pin : str, optional
         pin for investor
+    event : Event, optional
+        event to stop execute on timer
     """
-    # sleep until start time
-    utils.sleep_until(start_time)
+    if event is None:
+        event = Event()
 
-    event = Event()
+    # sleep until start time
+    utils.sleep_until(start_time, event=event)
+
     timer = Timer(utils.seconds_until(end_time), event.set)
     timer.start()
 

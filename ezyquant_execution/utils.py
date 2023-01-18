@@ -2,6 +2,8 @@ import math
 import time as t
 from datetime import datetime, time
 from functools import lru_cache
+from threading import Event
+from typing import Optional
 
 import numpy as np
 
@@ -24,7 +26,7 @@ def seconds_until(target_time: time) -> float:
     return (time_to_datetime(target_time) - datetime.now()).total_seconds()
 
 
-def sleep_until(target_time: time) -> None:
+def sleep_until(target_time: time, event: Optional[Event] = None) -> None:
     """Sleep until the end time is reached.
 
     If the end time has already passed, this function will return
@@ -35,7 +37,10 @@ def sleep_until(target_time: time) -> None:
 
     # Sleep for the remaining time
     if seconds_remaining > 0:
-        t.sleep(seconds_remaining)
+        if event is None:
+            t.sleep(seconds_remaining)
+        else:
+            event.wait(seconds_remaining)
 
 
 """
