@@ -65,3 +65,5 @@ def execute_on_timer(
         # note that event.set() and timer.cancel() can be called multiple times
         event.set()
         timer.cancel()
+
+    return event
