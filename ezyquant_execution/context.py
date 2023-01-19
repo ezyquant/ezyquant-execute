@@ -386,5 +386,11 @@ class ExecuteContext:
         """Get order of the symbol."""
         orders = self._settrade_equity.get_orders()
         orders = [EquityOrder.from_camel_dict(i) for i in orders]
-        orders = [i for i in orders if i.symbol == self.symbol and condition(i)]
+        orders = self.filter_orders(orders, condition)
         return orders
+
+    def filter_orders(
+        self, orders: List[EquityOrder], condition: Callable
+    ) -> List[EquityOrder]:
+        """Filter orders."""
+        return [i for i in orders if i.symbol == self.symbol and condition(i)]
