@@ -263,21 +263,23 @@ class ExecuteContext:
 
     def cancel_all_orders(self) -> dict:
         """Cancel all orders with the same symbol."""
-        return self._cancel_orders(lambda x: True)
+        return self._cancel_orders()
 
     def cancel_all_buy_orders(self):
         """Cancel all buy orders with the same symbol."""
-        return self._cancel_orders(lambda x: x["side"].capitalize() == SIDE_BUY)
+        return self._cancel_orders(lambda x: x.side.capitalize() == SIDE_BUY)
 
     def cancel_all_sell_orders(self):
         """Cancel all sell orders with the same symbol."""
-        return self._cancel_orders(lambda x: x["side"].capitalize() == SIDE_SELL)
+        return self._cancel_orders(lambda x: x.side.capitalize() == SIDE_SELL)
 
     def cancel_orders_by_price(self, price: float):
         """Cancel all orders with the same symbol and price."""
-        return self._cancel_orders(lambda x: x["price"] == price)
+        return self._cancel_orders(lambda x: x.price == price)
 
-    def _cancel_orders(self, condition: Callable[[dict], bool]) -> dict:
+    def _cancel_orders(
+        self, condition: Callable[[EquityOrder], bool] = lambda x: True
+    ) -> dict:
         """Cancel orders which meet the condition.
 
         Parameters
@@ -290,12 +292,8 @@ class ExecuteContext:
         dict
             cancel order result
         """
-        orders = self._settrade_equity.get_orders()
-        order_no_list = [
-            i["orderNo"]
-            for i in orders
-            if condition(i) and i["symbol"] == self.symbol and i["canCancel"] == True
-        ]
+        orders = self.get_orders_symbol(condition)
+        order_no_list = [i.order_no for i in orders if i.can_cancel]
 
         if len(order_no_list) == 0:
             return {}
@@ -382,9 +380,11 @@ class ExecuteContext:
                 return EquityPortfolio.from_camel_dict(i)
         return None
 
-    def get_orders_symbol(self) -> List[EquityOrder]:
+    def get_orders_symbol(
+        self, condition: Callable[[EquityOrder], bool] = lambda x: True
+    ) -> List[EquityOrder]:
         """Get order of the symbol."""
         orders = self._settrade_equity.get_orders()
         orders = [EquityOrder.from_camel_dict(i) for i in orders]
-        orders = [i for i in orders if i.symbol == self.symbol]
+        orders = [i for i in orders if i.symbol == self.symbol and condition(i)]
         return orders
