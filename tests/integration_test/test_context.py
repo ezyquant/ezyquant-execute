@@ -156,3 +156,7 @@ class TestExecuteContext:
     def test_get_orders_symbol(self, exe_ctx: ExecuteContext):
         result = exe_ctx.get_orders_symbol()
         print(result)
+
+    def test_get_trades_symbol(self, exe_ctx: ExecuteContext):
+        result = exe_ctx.get_trades_symbol()
+        print(result)

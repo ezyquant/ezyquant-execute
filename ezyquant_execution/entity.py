@@ -132,3 +132,23 @@ class EquityOrder(SettradeStruct):
     trade_report: bool
     terminal_type: str
     valid_till_date: str
+
+
+@dataclass
+class EquityTrade(SettradeStruct):
+    account_no: str
+    broker_id: str
+    brokerage_fee: float
+    clearing_fee: float
+    deal_no: str
+    entry_id: str
+    order_no: str
+    px: float
+    qty: int
+    side: str
+    symbol: str
+    trade_date: str
+    trade_no: str
+    trade_time: str
+    trading_fee: float
+    trustee_id: str

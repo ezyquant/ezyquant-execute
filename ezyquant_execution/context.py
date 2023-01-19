@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from functools import cached_property
 from threading import Event
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 
 import pandas as pd
 from settrade_v2.equity import InvestorEquity, MarketRepEquity
@@ -11,8 +11,10 @@ from settrade_v2.realtime import RealtimeDataConnection
 from settrade_v2.user import Investor, MarketRep
 
 from . import utils
-from .entity import SIDE_BUY, SIDE_SELL, EquityOrder, EquityPortfolio
+from .entity import SIDE_BUY, SIDE_SELL, EquityOrder, EquityPortfolio, EquityTrade
 from .realtime import BidOfferSubscriber
+
+T = TypeVar("T")
 
 
 @dataclass
@@ -384,13 +386,24 @@ class ExecuteContext:
         self, condition: Callable[[EquityOrder], bool] = lambda x: True
     ) -> List[EquityOrder]:
         """Get order of the symbol."""
-        orders = self._settrade_equity.get_orders()
-        orders = [EquityOrder.from_camel_dict(i) for i in orders]
-        orders = self.filter_orders(orders, condition)
-        return orders
+        if isinstance(self._settrade_equity, InvestorEquity):
+            out = self._settrade_equity.get_orders()
+        else:
+            out = self._settrade_equity.get_orders_by_account_no(
+                account_no=self.account_no
+            )
+        out = [EquityOrder.from_camel_dict(i) for i in out]
+        out = self._filter_list(out, condition)
+        return out
 
-    def filter_orders(
-        self, orders: List[EquityOrder], condition: Callable
-    ) -> List[EquityOrder]:
-        """Filter orders."""
-        return [i for i in orders if i.symbol == self.symbol and condition(i)]
+    def get_trades_symbol(
+        self, condition: Callable[[EquityTrade], bool] = lambda x: True
+    ) -> List[EquityTrade]:
+        out = self._settrade_equity.get_trades(**self._acc_no_kw)
+        out = [EquityTrade.from_camel_dict(i) for i in out]
+        out = self._filter_list(out, condition)
+        return out
+
+    def _filter_list(self, l: List[T], condition: Callable) -> List[T]:
+        """Filter list by symbol and condition."""
+        return [i for i in l if i.symbol == self.symbol and condition(i)]  # type: ignore
