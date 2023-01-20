@@ -21,6 +21,7 @@ from .entity import (
     EquityPortfolio,
     EquityTrade,
     PortfolioResponse,
+    StockQuoteResponse,
 )
 from .realtime import BidOfferSubscriber
 
@@ -56,7 +57,7 @@ class ExecuteContext:
     @property
     def market_price(self) -> float:
         """Market price."""
-        return self.get_quote_symbol()["last"]
+        return self.get_quote_symbol().last
 
     @property
     def best_bid_price(self) -> float:
@@ -361,9 +362,10 @@ class ExecuteContext:
         )
         return df
 
-    def get_quote_symbol(self) -> dict:
+    def get_quote_symbol(self) -> StockQuoteResponse:
         """Get quote symbol."""
-        return self._settrade_market_data.get_quote_symbol(symbol=self.symbol)
+        res = self._settrade_market_data.get_quote_symbol(symbol=self.symbol)
+        return StockQuoteResponse.from_camel_dict(res)
 
     def get_account_info(self) -> BaseAccountInfo:
         """Get account info."""

@@ -10,6 +10,52 @@ SIDE_BUY = "Buy"
 SIDE_SELL = "Sell"
 SIDE_TYPE = Literal["Buy", "Sell"]
 
+
+class SettradeStruct:
+    @classmethod
+    def from_camel_dict(cls, dct: dict):
+        snake_dct = {utils.camel_to_snake(k): v for k, v in dct.items()}
+        return cls(
+            **{
+                k: v
+                for k, v in snake_dct.items()
+                if k in inspect.signature(cls).parameters
+            }
+        )
+
+
+@dataclass
+class StockQuoteResponse(SettradeStruct):
+    instrument_type: str
+    symbol: str
+    high: float
+    low: float
+    last: float
+    average: float
+    change: float
+    percent_change: float
+    total_volume: int
+    security_type: str
+    eps: float
+    pe: float
+    pbv: float
+    percent_yield: float
+    maturity_date: str
+    exercise_price: float
+    underlying: str
+    underlying_price: float
+    intrinsic_value: float
+    theoretical: float
+    moneyness: str
+    last_trading_date: str
+    to_last_trade: int
+    exercise_ratio: float
+    implied_volatility: float
+    exchange: str
+    aum_size: float
+    inav: float
+
+
 # Market Section
 @dataclass
 class BidOfferItem:
@@ -63,19 +109,6 @@ class BidOffer:
             for i in range(1, 11)
         ]
         return cls(data["symbol"], bids, asks)
-
-
-class SettradeStruct:
-    @classmethod
-    def from_camel_dict(cls, dct: dict):
-        snake_dct = {utils.camel_to_snake(k): v for k, v in dct.items()}
-        return cls(
-            **{
-                k: v
-                for k, v in snake_dct.items()
-                if k in inspect.signature(cls).parameters
-            }
-        )
 
 
 @dataclass
