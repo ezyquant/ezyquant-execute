@@ -1,6 +1,6 @@
 import inspect
 from dataclasses import dataclass
-from typing import List
+from typing import List, Literal
 
 import pandas as pd
 
@@ -8,6 +8,7 @@ from . import utils
 
 SIDE_BUY = "Buy"
 SIDE_SELL = "Sell"
+SIDE_TYPE = Literal["Buy", "Sell"]
 
 # Market Section
 @dataclass
@@ -180,7 +181,7 @@ class EquityOrder(SettradeStruct):
     """Trade time (yyyy-MM-dd'T'HH:mm:ss)"""
     entry_time: str
     """Entry time (yyyy-MM-dd'T'HH:mm:ss)"""
-    side: str
+    side: SIDE_TYPE
     """Order side"""
     price_type: str
     """Account number"""
@@ -258,7 +259,7 @@ class EquityTrade(SettradeStruct):
     """Trade time (yyyy-MM-dd'T'HH:mm:ss)"""
     symbol: str
     """Symbol"""
-    side: str
+    side: SIDE_TYPE
     """Order side"""
     qty: int
     """Volume"""

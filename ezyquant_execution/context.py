@@ -14,6 +14,7 @@ from . import utils
 from .entity import (
     SIDE_BUY,
     SIDE_SELL,
+    SIDE_TYPE,
     BaseAccountInfo,
     EquityOrder,
     EquityPortfolio,
@@ -135,8 +136,9 @@ class ExecuteContext:
     Place order functions
     """
 
-    def buy(
+    def place_order(
         self,
+        side: SIDE_TYPE,
         volume: float,
         price: float,
         qty_open: int = 0,
@@ -145,55 +147,41 @@ class ExecuteContext:
         validity_type: str = "Day",
         bypass_warning: Optional[bool] = True,
         valid_till_date: Optional[str] = None,
-    ) -> dict:
+    ) -> Optional[EquityOrder]:
+        """Place order.
+
+        Round volume to 100. If volume is 0, return None.
+        """
+        assert side in (SIDE_BUY, SIDE_SELL), "side must be 'Buy' or 'Sell'"
+
+        volume = utils.round_100(volume)
+        if volume == 0:
+            return
+
+        res = self._settrade_equity.place_order(
+            symbol=self.symbol,
+            side=side,
+            volume=volume,
+            price=price,
+            qty_open=qty_open,
+            trustee_id_type=trustee_id_type,
+            price_type=price_type,
+            validity_type=validity_type,
+            bypass_warning=bypass_warning,
+            valid_till_date=valid_till_date,
+            **self._pin_acc_no_kw
+        )
+        return EquityOrder.from_camel_dict(res)
+
+    def buy(self, volume: float, price: float) -> Optional[EquityOrder]:
         """Place buy order."""
-        volume = utils.round_100(volume)
-        if volume == 0:
-            return {}
-        return self._settrade_equity.place_order(
-            side=SIDE_BUY,
-            symbol=self.symbol,
-            volume=volume,
-            price=price,
-            qty_open=qty_open,
-            trustee_id_type=trustee_id_type,
-            price_type=price_type,
-            validity_type=validity_type,
-            bypass_warning=bypass_warning,
-            valid_till_date=valid_till_date,
-            **self._pin_acc_no_kw
-        )
+        return self.place_order(side=SIDE_BUY, volume=volume, price=price)
 
-    def sell(
-        self,
-        volume: float,
-        price: float,
-        qty_open: int = 0,
-        trustee_id_type: str = "Local",
-        price_type: str = "Limit",
-        validity_type: str = "Day",
-        bypass_warning: Optional[bool] = True,
-        valid_till_date: Optional[str] = None,
-    ) -> dict:
+    def sell(self, volume: float, price: float) -> Optional[EquityOrder]:
         """Place sell order."""
-        volume = utils.round_100(volume)
-        if volume == 0:
-            return {}
-        return self._settrade_equity.place_order(
-            side=SIDE_SELL,
-            symbol=self.symbol,
-            volume=volume,
-            price=price,
-            qty_open=qty_open,
-            trustee_id_type=trustee_id_type,
-            price_type=price_type,
-            validity_type=validity_type,
-            bypass_warning=bypass_warning,
-            valid_till_date=valid_till_date,
-            **self._pin_acc_no_kw
-        )
+        return self.place_order(side=SIDE_SELL, volume=volume, price=price)
 
-    def buy_pct_port(self, pct_port: float) -> dict:
+    def buy_pct_port(self, pct_port: float) -> Optional[EquityOrder]:
         """Buy from the percentage of the portfolio. calculate the buy volume by pct_port * port_value / best ask price.
 
         Parameters
@@ -203,7 +191,7 @@ class ExecuteContext:
         """
         return self.buy_value(self.port_value * pct_port)
 
-    def buy_value(self, value: float) -> dict:
+    def buy_value(self, value: float) -> Optional[EquityOrder]:
         """Buy from the given value. calculate the buy volume by value / best
         ask price.
 
@@ -216,7 +204,7 @@ class ExecuteContext:
         volume = value / price
         return self.buy(volume=volume, price=price)
 
-    def sell_pct_port(self, pct_port: float) -> dict:
+    def sell_pct_port(self, pct_port: float) -> Optional[EquityOrder]:
         """Sell from the percentage of the portfolio. calculate the sell volume by pct_port * port_value / best ask price.
         Parameters
         ----------
@@ -225,7 +213,7 @@ class ExecuteContext:
         """
         return self.sell_value(self.port_value * pct_port)
 
-    def sell_value(self, value: float) -> dict:
+    def sell_value(self, value: float) -> Optional[EquityOrder]:
         """Sell from the given value. calculate the sell volume by value / best
         bid price.
 
@@ -238,7 +226,7 @@ class ExecuteContext:
         volume = value / price
         return self.sell(volume=volume, price=price)
 
-    def target_pct_port(self, pct_port: float) -> dict:
+    def target_pct_port(self, pct_port: float) -> Optional[EquityOrder]:
         """Buy/Sell to make the current position reach the target percentage of
         the portfolio. Calculate the buy/sell volume by compare between the
         best bid/ask price.
@@ -250,7 +238,7 @@ class ExecuteContext:
         """
         return self.target_value(self.port_value * pct_port)
 
-    def target_value(self, value: float) -> dict:
+    def target_value(self, value: float) -> Optional[EquityOrder]:
         """Buy/Sell to make the current position reach the target value.
         Calculate the buy/sell volume by compare between the best bid/ask
         price.
