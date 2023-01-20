@@ -11,7 +11,15 @@ from settrade_v2.realtime import RealtimeDataConnection
 from settrade_v2.user import Investor, MarketRep
 
 from . import utils
-from .entity import SIDE_BUY, SIDE_SELL, EquityOrder, EquityPortfolio, EquityTrade
+from .entity import (
+    SIDE_BUY,
+    SIDE_SELL,
+    BaseAccountInfo,
+    EquityOrder,
+    EquityPortfolio,
+    EquityTrade,
+    PortfolioResponse,
+)
 from .realtime import BidOfferSubscriber
 
 T = TypeVar("T")
@@ -65,22 +73,22 @@ class ExecuteContext:
     @property
     def line_available(self) -> float:
         """Line Available."""
-        return self.get_account_info()["lineAvailable"]
+        return self.get_account_info().line_available
 
     @property
     def cash_balance(self) -> float:
         """Cash Balance."""
-        return self.get_account_info()["cashBalance"]
+        return self.get_account_info().cash_balance
 
     @property
     def total_cost_value(self) -> float:
         """Sum of all stock market value in portfolio."""
-        return self.get_portfolios()["totalPortfolio"]["amount"]
+        return self.get_portfolios().total_portfolio.amount
 
     @property
     def total_market_value(self) -> float:
         """Sum of all stock cost value in portfolio."""
-        return self.get_portfolios()["totalPortfolio"]["marketValue"]
+        return self.get_portfolios().total_portfolio.market_value
 
     @property
     def port_value(self) -> float:
@@ -304,7 +312,7 @@ class ExecuteContext:
         )
 
     """
-    Settrade Open API functions
+    Settrade SDK functions
     """
 
     @property
@@ -366,20 +374,22 @@ class ExecuteContext:
         """Get quote symbol."""
         return self._settrade_market_data.get_quote_symbol(symbol=self.symbol)
 
-    def get_account_info(self) -> Dict[str, Any]:
+    def get_account_info(self) -> BaseAccountInfo:
         """Get account info."""
-        return self._settrade_equity.get_account_info(**self._acc_no_kw)
+        res = self._settrade_equity.get_account_info(**self._acc_no_kw)
+        return BaseAccountInfo.from_camel_dict(res)
 
-    def get_portfolios(self) -> Dict[str, Any]:
+    def get_portfolios(self) -> PortfolioResponse:
         """Get portfolio."""
-        return self._settrade_equity.get_portfolios()  # type: ignore
+        res: Dict[str, Any] = self._settrade_equity.get_portfolios(**self._acc_no_kw)  # type: ignore
+        return PortfolioResponse.from_camel_dict(res)
 
     def get_portfolio_symbol(self) -> Optional[EquityPortfolio]:
         """Get portfolio of the symbol."""
-        ports = self.get_portfolios()
-        for i in ports["portfolioList"]:
-            if i["symbol"] == self.symbol:
-                return EquityPortfolio.from_camel_dict(i)
+        res = self.get_portfolios()
+        for i in res.portfolio_list:
+            if i.symbol == self.symbol:
+                return i
         return None
 
     def get_orders_symbol(

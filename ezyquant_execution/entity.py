@@ -1,3 +1,4 @@
+import inspect
 from dataclasses import dataclass
 from typing import List
 
@@ -66,89 +67,208 @@ class BidOffer:
 class SettradeStruct:
     @classmethod
     def from_camel_dict(cls, dct: dict):
-        return cls(**{utils.camel_to_snake(k): v for k, v in dct.items()})
+        snake_dct = {utils.camel_to_snake(k): v for k, v in dct.items()}
+        return cls(
+            **{
+                k: v
+                for k, v in snake_dct.items()
+                if k in inspect.signature(cls).parameters
+            }
+        )
+
+
+@dataclass
+class BaseAccountInfo(SettradeStruct):
+    line_available: float
+    """Line available"""
+    credit_limit: float
+    """Credit limit"""
+    cash_balance: float
+    """Cash balance"""
+    account_type: str
+    """Account Type"""
+    client_type: str
+    """Client Type"""
+    customer_type: str
+    """Customer Type"""
+    can_buy: bool
+    """Flag indicates that the account has a permission to buy stock"""
+    can_sell: bool
+    """Flag indicates that the account has a permission to sell stock"""
+    crossing_key: str
+    """Crossing Key"""
+    credit_balance: float
+    """Credit Balance"""
+
+
+@dataclass
+class PortfolioResponse:
+    portfolio_list: List["EquityPortfolio"]
+    total_portfolio: "EquityPortfolio"
+
+    @classmethod
+    def from_camel_dict(cls, dct: dict):
+        return cls(
+            portfolio_list=[
+                EquityPortfolio.from_camel_dict(i) for i in dct["portfolioList"]
+            ],
+            total_portfolio=EquityPortfolio.from_camel_dict(dct["totalPortfolio"]),
+        )
 
 
 @dataclass
 class EquityPortfolio(SettradeStruct):
     symbol: str
+    """Symbol"""
     flag: str
+    """Flag indicates stock's condition (if any). Return description will be display description, for example (P) for margin pledge symbol"""
     nvdr_flag: str
+    """Flag indicates trustee type"""
     market_price: float
+    """Current market price"""
     amount: float
+    """Amount"""
     marketdescription: float
+    """Market description"""
     market_value: float
+    """Market value"""
     profit: float
+    """Profit/Loss"""
     percent_profit: float
+    """Percentage of profit"""
     realize_profit: float
+    """Realized profit/loss"""
     start_volume: float
+    """Initial volume"""
     current_volume: float
+    """Current volume"""
     actual_volume: float
+    """Actual volume"""
     start_price: float
+    """Initial price"""
     average_price: float
+    """Average price"""
     show_na: bool
+    """Flag indicates symbol non-existence. Return true if the stock isn't existed."""
     port_flag: str
+    """Portfolio flag"""
     margin_rate: float
+    """Margin rate"""
     liabilities: float
+    """Liabilities"""
     commission_rate: float
+    """Commission rate"""
     vat_rate: float
+    """Vat rate"""
 
 
 @dataclass
 class EquityOrder(SettradeStruct):
     enter_id: str
+    """Enter Id"""
     account_no: str
+    """Account number"""
     order_no: str
+    """Settrade Order number"""
     set_order_no: str
+    """SET order number"""
     symbol: str
+    """Symbol"""
     trade_date: str
+    """Trade date (yyyy-MM-dd)"""
     trade_time: str
+    """Trade time (yyyy-MM-dd'T'HH:mm:ss)"""
     entry_time: str
+    """Entry time (yyyy-MM-dd'T'HH:mm:ss)"""
     side: str
+    """Order side"""
     price_type: str
+    """Account number"""
     price: float
+    """Price"""
     vol: int
+    """Volume"""
     iceberg_vol: int
+    """Iceberg volume"""
     validity: str
+    """Order validity"""
     order_type: str
+    """Order type"""
     matched: int
+    """Matched volume"""
     balance: int
+    """Balance volume"""
     cancelled: int
+    """Cancelled volume"""
     status: str
+    """Order status"""
     show_order_status: str
+    """Order status (display)"""
     show_order_status_meaning: str
+    """Order status meaning"""
     reject_code: int
+    """Reject code"""
     reject_reason: str
+    """Reject reason"""
     cancel_id: str
+    """Cancel Id"""
     cancel_time: str
+    """Cancel time(yyyy-MM-dd'T'HH:mm:ss)"""
     version: int
+    """Version of the order"""
     nvdr_flag: str
+    """Flag indicates trustee type"""
     can_change_account: bool
+    """Flag indicates that the order is allowed to change its account"""
     can_change_trustee_id: bool
+    """Flag indicates that the order is allowed to change its trustee Id"""
     can_change_price_vol: bool
+    """Flag indicates that the order is allowed to change its price or volume"""
     can_cancel: bool
+    """Flag indicates that the order is allowed to be cancelled"""
     counter_party_member: str
+    """Counter party member Id"""
     trade_report_type: str
+    """Trade report type"""
     trade_report: bool
+    """Flag indicates that the order is trade report"""
     terminal_type: str
+    """Terminal Type"""
     valid_till_date: str
+    """Valid Till Date (yyyy-MM-dd)"""
 
 
 @dataclass
 class EquityTrade(SettradeStruct):
-    account_no: str
     broker_id: str
-    brokerage_fee: float
-    clearing_fee: float
-    deal_no: str
-    entry_id: str
+    """Broker Id"""
     order_no: str
-    px: float
-    qty: int
-    side: str
-    symbol: str
-    trade_date: str
+    """Order number"""
+    entry_id: str
+    """Entry Id (If the order placed by marketing representative)"""
+    account_no: str
+    """Account number"""
     trade_no: str
+    """Trade number"""
+    deal_no: str
+    """Deal number"""
+    trade_date: str
+    """Trade date (yyyy-MM-dd)"""
     trade_time: str
-    trading_fee: float
+    """Trade time (yyyy-MM-dd'T'HH:mm:ss)"""
+    symbol: str
+    """Symbol"""
+    side: str
+    """Order side"""
+    qty: int
+    """Volume"""
+    px: float
+    """Price"""
     trustee_id: str
+    """Trustee type"""
+    brokerage_fee: float
+    """Brokerage fee"""
+    trading_fee: float
+    """Trading Fee"""
+    clearing_fee: float
+    """Clearing Fee"""
