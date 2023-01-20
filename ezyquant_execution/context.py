@@ -30,15 +30,15 @@ T = TypeVar("T")
 
 @dataclass
 class ExecuteContext:
-    symbol: str
-    """Selected symbol."""
-    signal: Any
-    """Signal."""
     settrade_user: Union[Investor, MarketRep]
     """Settrade user."""
     account_no: str
     """Account number."""
-    event: Event
+    symbol: str
+    """Selected symbol."""
+    signal: Any = None
+    """Signal."""
+    event: Event = field(default_factory=Event)
     """Event object to stop on timer."""
     pin: Optional[str] = None
     """PIN."""
