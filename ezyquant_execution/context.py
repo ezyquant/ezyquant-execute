@@ -16,6 +16,7 @@ from .entity import (
     SIDE_SELL,
     SIDE_TYPE,
     BaseAccountInfo,
+    CancelOrder,
     EquityOrder,
     EquityPortfolio,
     EquityTrade,
@@ -259,25 +260,25 @@ class ExecuteContext:
     Cancel order functions
     """
 
-    def cancel_all_orders(self) -> dict:
+    def cancel_all_orders(self) -> List[CancelOrder]:
         """Cancel all orders with the same symbol."""
         return self._cancel_orders()
 
-    def cancel_all_buy_orders(self):
+    def cancel_all_buy_orders(self) -> List[CancelOrder]:
         """Cancel all buy orders with the same symbol."""
         return self._cancel_orders(lambda x: x.side.capitalize() == SIDE_BUY)
 
-    def cancel_all_sell_orders(self):
+    def cancel_all_sell_orders(self) -> List[CancelOrder]:
         """Cancel all sell orders with the same symbol."""
         return self._cancel_orders(lambda x: x.side.capitalize() == SIDE_SELL)
 
-    def cancel_orders_by_price(self, price: float):
+    def cancel_orders_by_price(self, price: float) -> List[CancelOrder]:
         """Cancel all orders with the same symbol and price."""
         return self._cancel_orders(lambda x: x.price == price)
 
     def _cancel_orders(
         self, condition: Callable[[EquityOrder], bool] = lambda x: True
-    ) -> dict:
+    ) -> List[CancelOrder]:
         """Cancel orders which meet the condition.
 
         Parameters
@@ -294,10 +295,12 @@ class ExecuteContext:
         order_no_list = [i.order_no for i in orders if i.can_cancel]
 
         if len(order_no_list) == 0:
-            return {}
-        return self._settrade_equity.cancel_orders(
+            return []
+
+        res = self._settrade_equity.cancel_orders(
             order_no_list=order_no_list, **self._pin_acc_no_kw
         )
+        return [CancelOrder.from_camel_dict(i) for i in res["results"]]
 
     """
     Settrade SDK functions

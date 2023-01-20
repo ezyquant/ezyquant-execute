@@ -79,12 +79,12 @@ class TestExecuteContext:
 
     def test_buy(self, exe_ctx: ExecuteContext):
         exe_ctx.cancel_all_orders()
-        result = exe_ctx.buy(volume=100, price=exe_ctx.market_price)
+        result = exe_ctx.buy(volume=100, price=exe_ctx.best_bid_price)
         print(result)
 
     def test_sell(self, exe_ctx: ExecuteContext):
         exe_ctx.cancel_all_orders()
-        result = exe_ctx.sell(volume=100, price=exe_ctx.market_price)
+        result = exe_ctx.sell(volume=100, price=exe_ctx.best_ask_price)
         print(result)
 
     def test_buy_pct_port(self, exe_ctx: ExecuteContext):
@@ -118,19 +118,24 @@ class TestExecuteContext:
         print(result)
 
     def test_cancel_all_orders(self, exe_ctx: ExecuteContext):
+        exe_ctx.buy(volume=100, price=exe_ctx.best_bid_price)
         result = exe_ctx.cancel_all_orders()
         print(result)
 
     def test_cancel_all_buy_orders(self, exe_ctx: ExecuteContext):
+        exe_ctx.buy(volume=100, price=exe_ctx.best_bid_price)
         result = exe_ctx.cancel_all_buy_orders()
         print(result)
 
     def test_cancel_all_sell_orders(self, exe_ctx: ExecuteContext):
+        exe_ctx.sell(volume=100, price=exe_ctx.best_ask_price)
         result = exe_ctx.cancel_all_sell_orders()
         print(result)
 
     def test_cancel_orders_by_price(self, exe_ctx: ExecuteContext):
-        result = exe_ctx.cancel_orders_by_price(1.0)
+        price = exe_ctx.best_bid_price
+        exe_ctx.buy(volume=100, price=price)
+        result = exe_ctx.cancel_orders_by_price(price)
         print(result)
 
     def test_get_candlestick_df(self, exe_ctx: ExecuteContext):

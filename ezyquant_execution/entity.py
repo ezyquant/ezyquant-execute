@@ -1,6 +1,6 @@
 import inspect
 from dataclasses import dataclass
-from typing import List, Literal
+from typing import Any, Dict, List, Literal
 
 import pandas as pd
 
@@ -273,3 +273,14 @@ class EquityTrade(SettradeStruct):
     """Trading Fee"""
     clearing_fee: float
     """Clearing Fee"""
+
+
+@dataclass
+class CancelOrder(SettradeStruct):
+    order_no: str
+    """Order number"""
+    error_response: Dict[str, Any]
+    http_status: str
+    """HTTP status"""
+    http_status_code: int
+    """HTTP status code"""
