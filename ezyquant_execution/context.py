@@ -261,26 +261,10 @@ class ExecuteContext:
     Cancel order functions
     """
 
-    def cancel_all_orders(self) -> List[CancelOrder]:
-        """Cancel all orders with the same symbol."""
-        return self._cancel_orders()
-
-    def cancel_all_buy_orders(self) -> List[CancelOrder]:
-        """Cancel all buy orders with the same symbol."""
-        return self._cancel_orders(lambda x: x.side.capitalize() == SIDE_BUY)
-
-    def cancel_all_sell_orders(self) -> List[CancelOrder]:
-        """Cancel all sell orders with the same symbol."""
-        return self._cancel_orders(lambda x: x.side.capitalize() == SIDE_SELL)
-
-    def cancel_orders_by_price(self, price: float) -> List[CancelOrder]:
-        """Cancel all orders with the same symbol and price."""
-        return self._cancel_orders(lambda x: x.price == price)
-
-    def _cancel_orders(
+    def cancel_orders_symbol(
         self, condition: Callable[[EquityOrder], bool] = lambda x: True
     ) -> List[CancelOrder]:
-        """Cancel orders which meet the condition.
+        """Cancel all orders with this symbol.
 
         Parameters
         ----------
@@ -302,6 +286,18 @@ class ExecuteContext:
             order_no_list=order_no_list, **self._pin_acc_no_kw
         )
         return [CancelOrder.from_camel_dict(i) for i in res["results"]]
+
+    def cancel_buy_orders_symbol(self) -> List[CancelOrder]:
+        """Cancel all buy orders with this symbol."""
+        return self.cancel_orders_symbol(lambda x: x.side.capitalize() == SIDE_BUY)
+
+    def cancel_sell_orders_symbol(self) -> List[CancelOrder]:
+        """Cancel all sell orders with this symbol."""
+        return self.cancel_orders_symbol(lambda x: x.side.capitalize() == SIDE_SELL)
+
+    def cancel_price_orders_symbol(self, price: float) -> List[CancelOrder]:
+        """Cancel all orders with this symbol and price."""
+        return self.cancel_orders_symbol(lambda x: x.price == price)
 
     """
     Settrade SDK functions
