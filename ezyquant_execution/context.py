@@ -403,6 +403,6 @@ class ExecuteContext:
         out = self._filter_list(out, condition)
         return out
 
-    def _filter_list(self, l: List[T], condition: Callable) -> List[T]:
+    def _filter_list(self, l: List[T], condition: Callable = lambda x: True) -> List[T]:
         """Filter list by symbol and condition."""
         return [i for i in l if i.symbol == self.symbol and condition(i)]  # type: ignore
