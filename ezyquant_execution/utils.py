@@ -64,12 +64,7 @@ def round_100(value: float, is_round_up: bool = False) -> int:
     int
         value after rounding
     """
-    if value % 100 == 0:
-        return int(value)
-    if is_round_up:
-        return int(round((value + 50) / 100.0) * 100)
-    else:
-        return int(value // 100) * 100
+    return round_x(value=value, x=100, is_round_up=is_round_up)
 
 
 def round_even(value: float, is_round_up: bool = False) -> int:
@@ -87,12 +82,29 @@ def round_even(value: float, is_round_up: bool = False) -> int:
     int
         value after rounding
     """
-    if value % 2 == 0:
-        return int(value)
-    if is_round_up:
-        return int(round((value + 1) / 2.0) * 2)
-    else:
-        return int(value // 2) * 2
+    return round_x(value=value, x=2, is_round_up=is_round_up)
+
+
+def round_x(value: float, x: int, is_round_up: bool = False) -> int:
+    """Round float to nearest x.
+
+    Parameters
+    ----------
+    value : float
+        value to round
+    x : float
+        x
+    is_round_up : bool
+        is round up if value is not in 100, else round down.
+
+    Returns
+    -------
+    int
+        value after rounding
+    """
+    f = math.ceil if is_round_up else math.floor
+    out = f(abs(value) / x) * x
+    return out if value > 0 else -out
 
 
 """
