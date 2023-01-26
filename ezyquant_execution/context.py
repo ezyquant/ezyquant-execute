@@ -281,14 +281,7 @@ class ExecuteContext:
         """
         orders = self.get_orders_symbol(condition)
         order_no_list = [i.order_no for i in orders if i.can_cancel]
-
-        if len(order_no_list) == 0:
-            return []
-
-        res = self._settrade_equity.cancel_orders(
-            order_no_list=order_no_list, **self._pin_acc_no_kw
-        )
-        return [CancelOrder.from_camel_dict(i) for i in res["results"]]
+        return self._cancel_orders(order_no_list)
 
     def cancel_buy_orders_symbol(self) -> List[CancelOrder]:
         """Cancel all buy orders with this symbol."""
@@ -301,6 +294,15 @@ class ExecuteContext:
     def cancel_price_orders_symbol(self, price: float) -> List[CancelOrder]:
         """Cancel all orders with this symbol and price."""
         return self.cancel_orders_symbol(lambda x: x.price == price)
+
+    def _cancel_orders(self, order_no_list: List[str]) -> List[CancelOrder]:
+        if not order_no_list:
+            return []
+
+        res = self._settrade_equity.cancel_orders(
+            order_no_list=order_no_list, **self._pin_acc_no_kw
+        )
+        return [CancelOrder.from_camel_dict(i) for i in res["results"]]
 
     """
     Settrade SDK functions
