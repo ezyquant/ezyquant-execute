@@ -55,8 +55,11 @@ class ExecuteContext:
     """
 
     @property
-    def market_price(self) -> float:
-        """Market price."""
+    def market_price(self) -> Optional[float]:
+        """Market price.
+
+        Return None at pre-open session.
+        """
         return self.get_quote_symbol().last
 
     @property
@@ -347,6 +350,16 @@ class ExecuteContext:
         """Get candlestick data.
 
         Columns: ["lastSequence", "time", "open", "high", "low", "close", "volume", "value"]
+
+        Example
+        -------
+        Pre-open
+        >>>     lastSequence                      time  open  ...  close    volume         value
+        ... 0              0 2023-01-10 00:00:00+07:00  75.5  ...  75.25  29748824  2.234758e+09
+        ... 1              0 2023-01-11 00:00:00+07:00  75.0  ...  74.25  42858395  3.189858e+09
+        ... 2              0 2023-01-12 00:00:00+07:00  74.0  ...  74.00  33256792  2.466415e+09
+        ... 3              0 2023-01-13 00:00:00+07:00  74.0  ...  73.50  41266018  3.042763e+09
+        ... 4              0 2023-01-25 00:00:00+07:00  70.0  ...  70.00   2001000  1.500700e+08
         """
         df = pd.DataFrame(
             self._settrade_market_data.get_candlestick(
@@ -359,7 +372,42 @@ class ExecuteContext:
         return df
 
     def get_quote_symbol(self) -> StockQuoteResponse:
-        """Get quote symbol."""
+        """Get quote symbol.
+
+        Example
+        -------
+        Pre-open
+        >>> StockQuoteResponse(
+        ...     instrument_type="STOCK",
+        ...     symbol="AOT",
+        ...     high=None,
+        ...     low=None,
+        ...     last=None,
+        ...     average=None,
+        ...     change=None,
+        ...     percent_change=None,
+        ...     total_volume=0,
+        ...     security_type="CS",
+        ...     eps=-0.77615,
+        ...     pe=0.0,
+        ...     pbv=10.36,
+        ...     percent_yield=0.0,
+        ...     maturity_date=None,
+        ...     exercise_price=None,
+        ...     underlying=None,
+        ...     underlying_price=None,
+        ...     intrinsic_value=None,
+        ...     theoretical=None,
+        ...     moneyness=None,
+        ...     last_trading_date=None,
+        ...     to_last_trade=None,
+        ...     exercise_ratio=None,
+        ...     implied_volatility=None,
+        ...     exchange=None,
+        ...     aum_size=None,
+        ...     inav=None,
+        ... )
+        """
         res = self._settrade_market_data.get_quote_symbol(symbol=self.symbol)
         return StockQuoteResponse.from_camel_dict(res)
 
