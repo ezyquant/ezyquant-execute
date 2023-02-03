@@ -71,7 +71,8 @@ def execute_on_timer(
 
         # execute on_timer
         while not event.wait(interval):
-            (on_timer(i) for i in ctx_list)
+            [on_timer(i) for i in ctx_list]
+
     finally:
         # note that event.set() and timer.cancel() can be called multiple times
         event.set()
