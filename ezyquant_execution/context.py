@@ -42,8 +42,6 @@ class ExecuteContext:
     """Event object to stop on timer."""
     pin: Optional[str] = None
     """PIN."""
-    data: dict = field(default_factory=dict)
-    """Data dict for this context."""
 
     @property
     def ts(self) -> datetime:

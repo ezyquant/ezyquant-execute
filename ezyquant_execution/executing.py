@@ -57,19 +57,21 @@ def execute_on_timer(
     timer.start()
 
     try:
+        ctx_list = [
+            ExecuteContext(
+                symbol=k,
+                signal=v,
+                settrade_user=settrade_user,
+                account_no=account_no,
+                pin=pin,
+                event=event,
+            )
+            for k, v in signal_dict.items()
+        ]
+
         # execute on_timer
         while not event.wait(interval):
-            for k, v in signal_dict.items():
-                on_timer(
-                    ExecuteContext(
-                        symbol=k,
-                        signal=v,
-                        settrade_user=settrade_user,
-                        account_no=account_no,
-                        pin=pin,
-                        event=event,
-                    )
-                )
+            (on_timer(i) for i in ctx_list)
     finally:
         # note that event.set() and timer.cancel() can be called multiple times
         event.set()
