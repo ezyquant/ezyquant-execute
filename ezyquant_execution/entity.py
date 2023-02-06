@@ -11,6 +11,22 @@ SIDE_SELL = "Sell"
 SIDE_TYPE = Literal["Buy", "Sell"]
 
 
+PRICE_TYPE_LIMIT = "Limit"
+PRICE_TYPE_ATO = "ATO"
+PRICE_TYPE_ATC = "ATC"
+PRICE_TYPE_MP_MKT = "MP-MKT"
+PRICE_TYPE_MP_MTL = "MP-MTL"
+PRICE_TYPE = Literal["Limit", "ATO", "ATC", "MP-MKT", "MP-MTL"]
+
+
+VALIDITY_TYPE_DAY = "Day"
+VALIDITY_TYPE_FOK = "FOK"
+VALIDITY_TYPE_IOC = "IOC"
+VALIDITY_TYPE_DATE = "Date"
+VALIDITY_TYPE_CANCEL = "Cancel"
+VALIDITY_TYPE = Literal["Day", "FOK", "IOC", "Date", "Cancel"]
+
+
 class SettradeStruct:
     @classmethod
     def from_camel_dict(cls, dct: dict):
@@ -216,7 +232,7 @@ class EquityOrder(SettradeStruct):
     """Entry time (yyyy-MM-dd'T'HH:mm:ss)"""
     side: SIDE_TYPE
     """Order side"""
-    price_type: str
+    price_type: PRICE_TYPE
     """Account number"""
     price: float
     """Price"""
@@ -224,7 +240,7 @@ class EquityOrder(SettradeStruct):
     """Volume"""
     iceberg_vol: int
     """Iceberg volume"""
-    validity: str
+    validity: VALIDITY_TYPE
     """Order validity"""
     order_type: str
     """Order type"""

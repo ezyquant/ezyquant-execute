@@ -12,9 +12,11 @@ from settrade_v2.user import Investor, MarketRep
 
 from . import utils
 from .entity import (
+    PRICE_TYPE,
     SIDE_BUY,
     SIDE_SELL,
     SIDE_TYPE,
+    VALIDITY_TYPE,
     BaseAccountInfo,
     CancelOrder,
     EquityOrder,
@@ -146,8 +148,8 @@ class ExecuteContext:
         price: float,
         qty_open: int = 0,
         trustee_id_type: str = "Local",
-        price_type: str = "Limit",
-        validity_type: str = "Day",
+        price_type: PRICE_TYPE = "Limit",
+        validity_type: VALIDITY_TYPE = "Day",
         bypass_warning: Optional[bool] = True,
         valid_till_date: Optional[str] = None,
     ) -> Optional[EquityOrder]:
