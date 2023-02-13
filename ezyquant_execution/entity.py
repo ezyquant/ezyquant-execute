@@ -128,6 +128,19 @@ class BidOffer:
 
 
 @dataclass
+class PriceInfo(SettradeStruct):
+    symbol: str
+    projected_open_price: float
+    high: float
+    low: float
+    last: float
+    change: float
+    total_volume: float
+    total_value: float
+    market_status: str
+
+
+@dataclass
 class BaseAccountInfo(SettradeStruct):
     line_available: float
     """Line available"""

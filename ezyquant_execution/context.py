@@ -157,8 +157,6 @@ class ExecuteContext:
 
         Round volume to 100. If volume is 0, return None.
         """
-        assert side in (SIDE_BUY, SIDE_SELL), "side must be 'Buy' or 'Sell'"
-
         volume = utils.round_100(volume)
         if volume == 0:
             return

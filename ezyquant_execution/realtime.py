@@ -1,52 +1,64 @@
-from functools import lru_cache
 from threading import Event
-from typing import Optional
+from typing import Callable
 
 from settrade_v2.realtime import RealtimeDataConnection
 
-from .entity import BidOffer
+from .entity import BidOffer, PriceInfo
 
 
-class BidOfferSubscriber:
-    def __init__(self, symbol: str, rt_conn: RealtimeDataConnection):
-        self.symbol = symbol
-        self.rt_conn = rt_conn
+class SettradeSubscriber:
+    def __init__(self, function: Callable, *args, **kwargs):
+        self.function = function
+        self.args = args
+        self.kwargs = kwargs
 
-        self._bid_offer: Optional[BidOffer] = None
+        self._data: dict = {}
+
         self._event: Event = Event()
-
-    @property
-    def bid_offer(self) -> BidOffer:
-        self._subscribe()  # subscribe if not subscribed yet (lru_cache)
+        self.function(on_message=self._on_message, *self.args, **self.kwargs).start()
         self._event.wait()  # wait for first update
-        assert self._bid_offer is not None
-        return self._bid_offer
 
     @property
-    def best_bid_price(self) -> float:
-        return self.bid_offer.best_bid_price
+    def data(self) -> dict:
+        return self._data
 
-    @property
-    def best_bid_volume(self) -> int:
-        return self.bid_offer.best_bid_volume
-
-    @property
-    def best_ask_price(self) -> float:
-        return self.bid_offer.best_ask_price
-
-    @property
-    def best_ask_volume(self) -> int:
-        return self.bid_offer.best_ask_volume
-
-    @lru_cache(maxsize=1)
-    def _subscribe(self):
-        self.rt_conn.subscribe_bid_offer(
-            symbol=self.symbol, on_message=self._on_bid_offer_update
-        ).start()
-
-    def _on_bid_offer_update(self, message):
+    def _on_message(self, message):
         if message["is_success"]:
-            self._bid_offer = BidOffer.from_dict(message["data"])
+            self._data = message["data"]
             self._event.set()
         else:
             raise ConnectionError(message["message"])
+
+
+class BidOfferSubscriber(SettradeSubscriber):
+    def __init__(self, symbol: str, rt_conn: RealtimeDataConnection):
+        super().__init__(rt_conn.subscribe_bid_offer, symbol=symbol)
+
+    @property
+    def data(self) -> BidOffer:
+        return BidOffer.from_dict(super().data)
+
+    @property
+    def best_bid_price(self) -> float:
+        return self.data.best_bid_price
+
+    @property
+    def best_bid_volume(self) -> int:
+        return self.data.best_bid_volume
+
+    @property
+    def best_ask_price(self) -> float:
+        return self.data.best_ask_price
+
+    @property
+    def best_ask_volume(self) -> int:
+        return self.data.best_ask_volume
+
+
+class PriceInfoSubscriber(SettradeSubscriber):
+    def __init__(self, symbol: str, rt_conn: RealtimeDataConnection):
+        super().__init__(rt_conn.subscribe_price_info, symbol=symbol)
+
+    @property
+    def data(self) -> PriceInfo:
+        return PriceInfo.from_camel_dict(super().data)
