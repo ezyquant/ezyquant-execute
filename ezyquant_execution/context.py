@@ -25,7 +25,7 @@ from .entity import (
     PortfolioResponse,
     StockQuoteResponse,
 )
-from .realtime import BidOfferSubscriber
+from .realtime import BidOfferSubscriber, PriceInfoSubscriber
 
 T = TypeVar("T")
 
@@ -58,19 +58,19 @@ class ExecuteContext:
     def market_price(self) -> Optional[float]:
         """Market price.
 
-        Return None at pre-open session.
+        Return 0 at pre-open session.
         """
-        return self.get_quote_symbol().last
+        return self._po_sub.data.last
 
     @property
     def best_bid_price(self) -> float:
         """Best bid price."""
-        return self._bo_sub.best_bid_price
+        return self._bo_sub.data.best_bid_price
 
     @property
     def best_ask_price(self) -> float:
         """Best ask price."""
-        return self._bo_sub.best_ask_price
+        return self._bo_sub.data.best_ask_price
 
     """
     Account functions
@@ -345,6 +345,12 @@ class ExecuteContext:
             symbol=self.symbol, rt_conn=self._settrade_realtime_data_connection
         )
 
+    @cached_property
+    def _po_sub(self) -> PriceInfoSubscriber:
+        return PriceInfoSubscriber(
+            symbol=self.symbol, rt_conn=self._settrade_realtime_data_connection
+        )
+
     # TODO: remove if unused
     def get_candlestick_df(self, limit: int = 5) -> pd.DataFrame:
         """Get candlestick data.
@@ -371,43 +377,9 @@ class ExecuteContext:
         )
         return df
 
+    # TODO: remove if unused
     def get_quote_symbol(self) -> StockQuoteResponse:
-        """Get quote symbol.
-
-        Example
-        -------
-        Pre-open
-        >>> StockQuoteResponse(
-        ...     instrument_type="STOCK",
-        ...     symbol="AOT",
-        ...     high=None,
-        ...     low=None,
-        ...     last=None,
-        ...     average=None,
-        ...     change=None,
-        ...     percent_change=None,
-        ...     total_volume=0,
-        ...     security_type="CS",
-        ...     eps=-0.77615,
-        ...     pe=0.0,
-        ...     pbv=10.36,
-        ...     percent_yield=0.0,
-        ...     maturity_date=None,
-        ...     exercise_price=None,
-        ...     underlying=None,
-        ...     underlying_price=None,
-        ...     intrinsic_value=None,
-        ...     theoretical=None,
-        ...     moneyness=None,
-        ...     last_trading_date=None,
-        ...     to_last_trade=None,
-        ...     exercise_ratio=None,
-        ...     implied_volatility=None,
-        ...     exchange=None,
-        ...     aum_size=None,
-        ...     inav=None,
-        ... )
-        """
+        """Get quote symbol."""
         res = self._settrade_market_data.get_quote_symbol(symbol=self.symbol)
         return StockQuoteResponse.from_camel_dict(res)
 

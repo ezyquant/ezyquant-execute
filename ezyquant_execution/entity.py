@@ -1,6 +1,6 @@
 import inspect
 from dataclasses import dataclass
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict, List, Literal, Optional
 
 import pandas as pd
 
@@ -130,14 +130,27 @@ class BidOffer:
 @dataclass
 class PriceInfo(SettradeStruct):
     symbol: str
-    projected_open_price: float
-    high: float
-    low: float
-    last: float
-    change: float
-    total_volume: float
-    total_value: float
+    projected_open_price: Optional[float]
+    high: Optional[float]
+    low: Optional[float]
+    last: Optional[float]
+    change: Optional[float]
+    total_volume: Optional[float]
+    total_value: Optional[float]
     market_status: str
+
+    def __post_init__(self):
+        for i in [
+            "projected_open_price",
+            "high",
+            "low",
+            "last",
+            "change",
+            "total_volume",
+            "total_value",
+        ]:
+            if not getattr(self, i):
+                setattr(self, i, None)
 
 
 @dataclass

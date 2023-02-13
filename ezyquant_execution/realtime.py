@@ -38,22 +38,6 @@ class BidOfferSubscriber(SettradeSubscriber):
     def data(self) -> BidOffer:
         return BidOffer.from_dict(super().data)
 
-    @property
-    def best_bid_price(self) -> float:
-        return self.data.best_bid_price
-
-    @property
-    def best_bid_volume(self) -> int:
-        return self.data.best_bid_volume
-
-    @property
-    def best_ask_price(self) -> float:
-        return self.data.best_ask_price
-
-    @property
-    def best_ask_volume(self) -> int:
-        return self.data.best_ask_volume
-
 
 class PriceInfoSubscriber(SettradeSubscriber):
     def __init__(self, symbol: str, rt_conn: RealtimeDataConnection):
