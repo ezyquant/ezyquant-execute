@@ -1,3 +1,4 @@
+import time as t
 from dataclasses import dataclass, field
 from datetime import datetime
 from functools import cached_property
@@ -5,6 +6,7 @@ from threading import Event
 from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 
 import pandas as pd
+from settrade_v2.context import Context
 from settrade_v2.equity import InvestorEquity, MarketRepEquity
 from settrade_v2.market import MarketData
 from settrade_v2.realtime import RealtimeDataConnection
@@ -44,6 +46,26 @@ class ExecuteContext:
     """Event object to stop on timer."""
     pin: Optional[str] = None
     """PIN."""
+
+    def __post_init__(self):
+        # TODO: Test new refresh method
+        def new_refresh(self):
+            res = self.request(
+                "POST",
+                self.refresh_token_path,
+                json={"apiKey": self.app_id, "refreshToken": self.refresh_token},
+            )
+            if not res.ok:
+                self.login()  # Add this line
+                return
+            self.token = res.json()["access_token"]
+            self.refresh_token = res.json()["refresh_token"]
+            self.expired_at = int(t.time()) + res.json()["expires_in"]
+
+        # Override refresh method
+        self.settrade_user._ctx.refresh = type(Context.refresh)(
+            new_refresh, self.settrade_user._ctx, Context
+        )
 
     @property
     def ts(self) -> datetime:
