@@ -134,21 +134,13 @@ class PriceInfo(SettradeStruct):
     high: Optional[float]
     low: Optional[float]
     last: Optional[float]
-    change: Optional[float]
-    total_volume: Optional[float]
-    total_value: Optional[float]
+    change: float
+    total_volume: float
+    total_value: float
     market_status: str
 
     def __post_init__(self):
-        for i in [
-            "projected_open_price",
-            "high",
-            "low",
-            "last",
-            "change",
-            "total_volume",
-            "total_value",
-        ]:
+        for i in ["projected_open_price", "high", "low", "last"]:
             if not getattr(self, i):
                 setattr(self, i, None)
 
