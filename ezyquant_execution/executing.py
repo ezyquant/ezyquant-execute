@@ -64,7 +64,6 @@ def execute_on_timer(
                 settrade_user=settrade_user,
                 account_no=account_no,
                 pin=pin,
-                event=event,
             )
             for k, v in signal_dict.items()
         ]

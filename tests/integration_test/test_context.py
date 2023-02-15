@@ -1,5 +1,3 @@
-from threading import Event
-
 import pytest
 from settrade_v2.user import Investor
 
@@ -16,7 +14,6 @@ def exe_ctx(stt_inv: Investor):
         settrade_user=stt_inv,
         account_no=E_INV_ACCOUNT_NO,
         pin=PIN,
-        event=Event(),
     )
 
 

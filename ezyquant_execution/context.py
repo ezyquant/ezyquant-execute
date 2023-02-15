@@ -1,8 +1,7 @@
 import time as t
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from functools import cached_property
-from threading import Event
 from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 
 import pandas as pd
@@ -60,10 +59,11 @@ class ExecuteContext:
     """Selected symbol."""
     signal: Any = None
     """Signal."""
-    event: Event = field(default_factory=Event)
-    """Event object to stop on timer."""
     pin: Optional[str] = None
-    """PIN."""
+    """PIN.
+
+    Only for investor.
+    """
 
     @property
     def ts(self) -> datetime:
