@@ -1,4 +1,5 @@
 import time as t
+import warnings
 from dataclasses import dataclass
 from datetime import datetime
 from functools import cached_property
@@ -192,7 +193,7 @@ class ExecuteContext:
             validity_type=validity_type,
             bypass_warning=bypass_warning,
             valid_till_date=valid_till_date,
-            **self._pin_acc_no_kw
+            **self._pin_acc_no_kw,
         )
         return EquityOrder.from_camel_dict(res)
 
@@ -320,7 +321,15 @@ class ExecuteContext:
         res = self._settrade_equity.cancel_orders(
             order_no_list=order_no_list, **self._pin_acc_no_kw
         )
-        return [CancelOrder.from_camel_dict(i) for i in res["results"]]
+        out = [CancelOrder.from_camel_dict(i) for i in res["results"]]
+
+        for i in out:
+            if i.error_response is not None:
+                warnings.warn(
+                    f"Cancel order {i.order_no} failed: {i.error_response['message']}"
+                )
+
+        return out
 
     """
     Settrade SDK functions
