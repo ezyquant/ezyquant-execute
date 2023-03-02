@@ -24,7 +24,7 @@ signal_dict = {
 
 
 def on_timer(ctx: ExecuteContext):
-    ctx.cancel_all_orders()
+    ctx.cancel_orders_symbol()
     ctx.target_pct_port(ctx.signal)
 
 

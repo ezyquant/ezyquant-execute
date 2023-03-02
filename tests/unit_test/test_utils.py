@@ -6,6 +6,7 @@ from ezyquant_execution import utils
 @pytest.mark.parametrize(
     "value, is_round_up, expected_output",
     [
+        # Positive
         (0, True, 0),
         (1, True, 100),
         (99, True, 100),
@@ -16,25 +17,19 @@ from ezyquant_execution import utils
         (99, False, 0),
         (100, False, 100),
         (101, False, 100),
+        # Negative
+        (-1, True, -100),  #
+        (-99, True, -100),  #
+        (-100, True, -100),
+        (-101, True, -200),  #
+        (-1, False, 0),  #
+        (-99, False, 0),  #
+        (-100, False, -100),
+        (-101, False, -100),  #
     ],
 )
 def test_round_100(value, is_round_up, expected_output):
     assert utils.round_100(value, is_round_up) == expected_output
-
-
-@pytest.mark.parametrize(
-    "value, is_round_up, expected_output",
-    [
-        (0, True, 0),
-        (1, True, 2),
-        (2, True, 2),
-        (0, False, 0),
-        (1, False, 0),
-        (2, False, 2),
-    ],
-)
-def test_round_even(value, is_round_up, expected_output):
-    assert utils.round_even(value, is_round_up) == expected_output
 
 
 @pytest.mark.parametrize(

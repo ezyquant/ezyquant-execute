@@ -1,7 +1,10 @@
 import math
+import re
 import time as t
 from datetime import datetime, time
 from functools import lru_cache
+from threading import Event
+from typing import Optional
 
 import numpy as np
 
@@ -24,7 +27,7 @@ def seconds_until(target_time: time) -> float:
     return (time_to_datetime(target_time) - datetime.now()).total_seconds()
 
 
-def sleep_until(target_time: time) -> None:
+def sleep_until(target_time: time, event: Optional[Event] = None) -> None:
     """Sleep until the end time is reached.
 
     If the end time has already passed, this function will return
@@ -35,7 +38,10 @@ def sleep_until(target_time: time) -> None:
 
     # Sleep for the remaining time
     if seconds_remaining > 0:
-        t.sleep(seconds_remaining)
+        if event is None:
+            t.sleep(seconds_remaining)
+        else:
+            event.wait(seconds_remaining)
 
 
 """
@@ -58,12 +64,7 @@ def round_100(value: float, is_round_up: bool = False) -> int:
     int
         value after rounding
     """
-    if value % 100 == 0:
-        return int(value)
-    if is_round_up:
-        return int(round((value + 50) / 100.0) * 100)
-    else:
-        return int(value // 100) * 100
+    return round_x(value=value, x=100, is_round_up=is_round_up)
 
 
 def round_even(value: float, is_round_up: bool = False) -> int:
@@ -81,12 +82,29 @@ def round_even(value: float, is_round_up: bool = False) -> int:
     int
         value after rounding
     """
-    if value % 2 == 0:
-        return int(value)
-    if is_round_up:
-        return int(round((value + 1) / 2.0) * 2)
-    else:
-        return int(value // 2) * 2
+    return round_x(value=value, x=2, is_round_up=is_round_up)
+
+
+def round_x(value: float, x: int, is_round_up: bool = False) -> int:
+    """Round float to nearest x.
+
+    Parameters
+    ----------
+    value : float
+        value to round
+    x : float
+        x
+    is_round_up : bool
+        is round up if value is not in 100, else round down.
+
+    Returns
+    -------
+    int
+        value after rounding
+    """
+    f = math.ceil if is_round_up else math.floor
+    out = f(abs(value) / x) * x
+    return out if value > 0 else -out
 
 
 """
@@ -96,6 +114,7 @@ Price
 
 @lru_cache(maxsize=1)
 def _price_array() -> np.ndarray:
+    # https://classic.set.or.th/en/products/trading/equity/tradingsystem_p5.html
     ranges = [
         (0.01, 2, 0.01),
         (2, 5, 0.02),
@@ -167,3 +186,13 @@ def match_tick_price_sell(price: float, n_tick: int) -> float:
     return match_tick_price(price=price, n_tick=-n_tick, is_round_up=False)
     """
     return match_tick_price(price=price, n_tick=-n_tick, is_round_up=False)
+
+
+"""
+String
+"""
+
+
+def camel_to_snake(name):
+    name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()

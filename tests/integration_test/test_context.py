@@ -1,5 +1,3 @@
-from threading import Event
-
 import pytest
 from settrade_v2.user import Investor
 
@@ -16,7 +14,6 @@ def exe_ctx(stt_inv: Investor):
         settrade_user=stt_inv,
         account_no=E_INV_ACCOUNT_NO,
         pin=PIN,
-        event=Event(),
     )
 
 
@@ -78,51 +75,64 @@ class TestExecuteContext:
         print(result)
 
     def test_buy(self, exe_ctx: ExecuteContext):
-        result = exe_ctx.buy(volume=100, price=exe_ctx.market_price)
+        exe_ctx.cancel_orders_symbol()
+        result = exe_ctx.buy(volume=100, price=exe_ctx.best_bid_price)
         print(result)
 
     def test_sell(self, exe_ctx: ExecuteContext):
-        result = exe_ctx.sell(volume=100, price=exe_ctx.market_price)
+        exe_ctx.cancel_orders_symbol()
+        result = exe_ctx.sell(volume=100, price=exe_ctx.best_ask_price)
         print(result)
 
     def test_buy_pct_port(self, exe_ctx: ExecuteContext):
+        exe_ctx.cancel_orders_symbol()
         result = exe_ctx.buy_pct_port(0.1)
         print(result)
 
     def test_buy_value(self, exe_ctx: ExecuteContext):
+        exe_ctx.cancel_orders_symbol()
         result = exe_ctx.buy_value(1000)
         print(result)
 
     def test_sell_pct_port(self, exe_ctx: ExecuteContext):
+        exe_ctx.cancel_orders_symbol()
         result = exe_ctx.sell_pct_port(0.1)
         print(result)
 
     def test_sell_value(self, exe_ctx: ExecuteContext):
+        exe_ctx.cancel_orders_symbol()
         result = exe_ctx.sell_value(1000)
         print(result)
 
     def test_target_pct_port(self, exe_ctx: ExecuteContext):
+        exe_ctx.cancel_orders_symbol()
         result = exe_ctx.target_pct_port(0.1)
         print(result)
 
     def test_target_value(self, exe_ctx: ExecuteContext):
+        exe_ctx.cancel_orders_symbol()
         result = exe_ctx.target_value(1000)
         print(result)
 
-    def test_cancel_all_orders(self, exe_ctx: ExecuteContext):
-        result = exe_ctx.cancel_all_orders()
+    def test_cancel_orders_symbol(self, exe_ctx: ExecuteContext):
+        exe_ctx.buy(volume=100, price=exe_ctx.best_bid_price)
+        result = exe_ctx.cancel_orders_symbol()
         print(result)
 
-    def test_cancel_all_buy_orders(self, exe_ctx: ExecuteContext):
-        result = exe_ctx.cancel_all_buy_orders()
+    def test_cancel_buy_orders_symbol(self, exe_ctx: ExecuteContext):
+        exe_ctx.buy(volume=100, price=exe_ctx.best_bid_price)
+        result = exe_ctx.cancel_buy_orders_symbol()
         print(result)
 
-    def test_cancel_all_sell_orders(self, exe_ctx: ExecuteContext):
-        result = exe_ctx.cancel_all_sell_orders()
+    def test_cancel_sell_orders_symbol(self, exe_ctx: ExecuteContext):
+        exe_ctx.sell(volume=100, price=exe_ctx.best_ask_price)
+        result = exe_ctx.cancel_sell_orders_symbol()
         print(result)
 
-    def test_cancel_orders_by_price(self, exe_ctx: ExecuteContext):
-        result = exe_ctx.cancel_orders_by_price(1.0)
+    def test_cancel_price_orders_symbol(self, exe_ctx: ExecuteContext):
+        price = exe_ctx.best_bid_price
+        exe_ctx.buy(volume=100, price=price)
+        result = exe_ctx.cancel_price_orders_symbol(price)
         print(result)
 
     def test_get_candlestick_df(self, exe_ctx: ExecuteContext):
@@ -141,6 +151,14 @@ class TestExecuteContext:
         result = exe_ctx.get_portfolios()
         print(result)
 
-    def test_get_symbol_portfolio(self, exe_ctx: ExecuteContext):
-        result = exe_ctx.get_symbol_portfolio()
+    def test_get_portfolio_symbol(self, exe_ctx: ExecuteContext):
+        result = exe_ctx.get_portfolio_symbol()
+        print(result)
+
+    def test_get_orders_symbol(self, exe_ctx: ExecuteContext):
+        result = exe_ctx.get_orders_symbol()
+        print(result)
+
+    def test_get_trades_symbol(self, exe_ctx: ExecuteContext):
+        result = exe_ctx.get_trades_symbol()
         print(result)

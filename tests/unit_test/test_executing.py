@@ -68,7 +68,6 @@ class TestExecuting:
                         settrade_user=ANY,
                         account_no=ANY,
                         pin=ANY,
-                        event=ANY,
                         symbol=k,
                         signal=v,
                     )
