@@ -1,6 +1,7 @@
+import asyncio
+import contextlib
 import math
 import re
-import time as t
 from datetime import datetime, time
 from functools import lru_cache
 from threading import Event
@@ -33,15 +34,41 @@ def sleep_until(target_time: time, event: Optional[Event] = None) -> None:
     If the end time has already passed, this function will return
     immediately.
     """
+    if event is None:
+        event = Event()
+
     # Calculate seconds remaining until end time
     seconds_remaining = seconds_until(target_time)
 
     # Sleep for the remaining time
     if seconds_remaining > 0:
-        if event is None:
-            t.sleep(seconds_remaining)
-        else:
-            event.wait(seconds_remaining)
+        event.wait(seconds_remaining)
+
+
+async def async_sleep_until(
+    target_time: time, event: Optional[asyncio.Event] = None
+) -> None:
+    """Sleep until the end time is reached.
+
+    If the end time has already passed, this function will return
+    immediately.
+    """
+    if event is None:
+        event = asyncio.Event()
+
+    # Calculate seconds remaining until end time
+    seconds_remaining = seconds_until(target_time)
+
+    # Sleep for the remaining time
+    if seconds_remaining > 0:
+        await async_event_wait(event, seconds_remaining)
+
+
+async def async_event_wait(event: asyncio.Event, timeout: float):
+    # suppress TimeoutError because we'll return False in case of timeout
+    with contextlib.suppress(asyncio.TimeoutError):
+        await asyncio.wait_for(event.wait(), timeout)
+    return event.is_set()
 
 
 """
