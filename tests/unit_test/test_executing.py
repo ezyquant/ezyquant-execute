@@ -5,10 +5,11 @@ from unittest.mock import ANY, Mock
 import pytest
 
 from ezyquant_execution.context import ExecuteContext
-from ezyquant_execution.executing import execute_on_timer
+from ezyquant_execution.executing import async_execute_on_timer, execute_on_timer
+from tests.utils import AsyncMock
 
 
-class TestExecuting:
+class TestExecuteOnTimer:
     @pytest.mark.parametrize("signal_dict", [{}, {"a": 1}, {"a": 1, "b": 2}])
     def test_signal_dict(self, signal_dict: Dict[str, Any]):
         self._test(signal_dict=signal_dict)
@@ -72,3 +73,35 @@ class TestExecuting:
                         signal=v,
                     )
                 )
+
+
+async def test_async_execute_on_timer():
+    # Mock
+    signal_dict = {"a": 1}
+    on_timer = AsyncMock()
+    interval = 1.0
+    start_time = time(0, 0, 0)
+    end_time = (datetime.now() + timedelta(seconds=1)).time()
+
+    # Test
+    await async_execute_on_timer(
+        settrade_user=ANY,
+        account_no=ANY,
+        signal_dict=signal_dict,
+        on_timer=on_timer,
+        interval=interval,
+        start_time=start_time,
+        end_time=end_time,
+    )
+
+    # Check
+    for k, v in signal_dict.items():
+        on_timer.assert_any_call(
+            ExecuteContext(
+                settrade_user=ANY,
+                account_no=ANY,
+                pin=ANY,
+                symbol=k,
+                signal=v,
+            )
+        )
