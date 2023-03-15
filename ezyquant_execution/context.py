@@ -2,7 +2,7 @@ import time as t
 import warnings
 from dataclasses import dataclass
 from datetime import datetime
-from functools import cached_property
+from functools import cached_property, lru_cache
 from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 
 import pandas as pd
@@ -10,7 +10,7 @@ from settrade_v2.context import Context
 from settrade_v2.equity import InvestorEquity, MarketRepEquity
 from settrade_v2.market import MarketData
 from settrade_v2.realtime import RealtimeDataConnection
-from settrade_v2.user import Investor, MarketRep
+from settrade_v2.user import Investor, MarketRep, _BaseUser
 
 from . import utils
 from .entity import (
@@ -28,6 +28,13 @@ from .entity import (
     StockQuoteResponse,
 )
 from .realtime import BidOfferSubscriber, PriceInfoSubscriber
+
+# Override _BaseUser.RealtimeDataConnection
+# because subscribe will error if init RealtimeDataConnection more than once
+# Can remove this line if this issue is fixed
+_BaseUser.RealtimeDataConnection = lru_cache(maxsize=1)(
+    _BaseUser.RealtimeDataConnection
+)
 
 T = TypeVar("T")
 
