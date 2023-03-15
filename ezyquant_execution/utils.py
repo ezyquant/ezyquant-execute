@@ -48,11 +48,7 @@ def sleep_until(target_time: time, event: Optional[Event] = None) -> None:
 async def async_sleep_until(
     target_time: time, event: Optional[asyncio.Event] = None
 ) -> None:
-    """Sleep until the end time is reached.
-
-    If the end time has already passed, this function will return
-    immediately.
-    """
+    """Same as sleep_until but for asyncio."""
     if event is None:
         event = asyncio.Event()
 
@@ -64,7 +60,7 @@ async def async_sleep_until(
         await async_event_wait(event, seconds_remaining)
 
 
-async def async_event_wait(event: asyncio.Event, timeout: float):
+async def async_event_wait(event: asyncio.Event, timeout: Optional[float]):
     # suppress TimeoutError because we'll return False in case of timeout
     with contextlib.suppress(asyncio.TimeoutError):
         await asyncio.wait_for(event.wait(), timeout)
