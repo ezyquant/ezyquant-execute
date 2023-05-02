@@ -339,6 +339,36 @@ class ExecuteContext:
         return out
 
     """
+    Validate order functions
+    """
+
+    def is_buy_cash_sufficient(
+        self, volume: float, price: float, pct_commission: float = 0.0
+    ) -> bool:
+        """Check if the cash is sufficient for buy order.
+
+        Parameters
+        ----------
+        volume: float
+            volume
+        price: float
+            price
+        pct_commission: float
+            percentage of commission example 0.01 for 1%
+        """
+        return self.cash_balance >= volume * price * (1 + pct_commission)
+
+    def is_sell_volume_sufficient(self, volume: float) -> bool:
+        """Check if the volume is sufficient for sell order.
+
+        Parameters
+        ----------
+        volume: float
+            volume
+        """
+        return self.volume >= volume
+
+    """
     Settrade SDK functions
     """
 
