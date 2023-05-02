@@ -354,7 +354,7 @@ class ExecuteContext:
         price: float
             price
         pct_commission: float
-            percentage of commission
+            percentage of commission example 0.01 for 1%
         """
         return self.cash_balance >= volume * price * (1 + pct_commission)
 
