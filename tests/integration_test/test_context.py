@@ -135,6 +135,14 @@ class TestExecuteContext:
         result = exe_ctx.cancel_price_orders_symbol(price)
         print(result)
 
+    def test_is_buy_cash_sufficient(self, exe_ctx: ExecuteContext):
+        result = exe_ctx.is_buy_cash_sufficient(100, 100)
+        print(result)
+
+    def test_is_sell_volume_sufficient(self, exe_ctx: ExecuteContext):
+        result = exe_ctx.is_sell_volume_sufficient(100)
+        print(result)
+
     def test_get_candlestick_df(self, exe_ctx: ExecuteContext):
         result = exe_ctx.get_candlestick_df()
         print(result)
