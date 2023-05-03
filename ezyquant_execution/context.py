@@ -342,10 +342,10 @@ class ExecuteContext:
     Validate order functions
     """
 
-    def is_buy_cash_sufficient(
+    def is_buy_sufficient(
         self, volume: float, price: float, pct_commission: float = 0.0
     ) -> bool:
-        """Check if the cash is sufficient for buy order.
+        """Check if the line available is sufficient for buy order.
 
         Parameters
         ----------
@@ -356,9 +356,9 @@ class ExecuteContext:
         pct_commission: float
             percentage of commission example 0.01 for 1%
         """
-        return self.cash_balance >= volume * price * (1 + pct_commission)
+        return self.line_available >= volume * price * (1 + pct_commission)
 
-    def is_sell_volume_sufficient(self, volume: float) -> bool:
+    def is_sell_sufficient(self, volume: float) -> bool:
         """Check if the volume is sufficient for sell order.
 
         Parameters
