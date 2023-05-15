@@ -12,19 +12,24 @@ class SettradeSubscriber:
         self.args = args
         self.kwargs = kwargs
 
-        self._data: Optional[dict] = {}
+        self._data: dict = {}
         self._error: Optional[Exception] = None
 
         self._event: Event = Event()
-        self.function(on_message=self._on_message, *self.args, **self.kwargs).start()
-        self._event.wait(timeout=30)  # wait for first update
+
+        self._subscriber = self.function(
+            on_message=self._on_message, *self.args, **self.kwargs
+        )
+        self._subscriber.start()
+
+        # wait for first data to be received
+        if not self._event.wait(timeout=30):
+            raise ConnectionError("No data received yet")
 
     @property
     def data(self) -> dict:
         if self._error:
             raise self._error
-        if self._data is None:
-            raise ConnectionError("No data received yet")
         return self._data
 
     def _on_message(self, message):
