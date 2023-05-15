@@ -12,7 +12,7 @@ class SettradeSubscriber:
         self.args = args
         self.kwargs = kwargs
 
-        self._data: dict = dict()
+        self._data: dict = {}
         self._error: Optional[Exception] = None
 
         self._event: Event = Event()
