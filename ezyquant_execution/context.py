@@ -1,13 +1,11 @@
+import logging
 import time as t
-import warnings
 from datetime import datetime
 from functools import cached_property, lru_cache
 from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 
-import pandas as pd
 from settrade_v2.context import Context
 from settrade_v2.equity import InvestorEquity, MarketRepEquity
-from settrade_v2.market import MarketData
 from settrade_v2.realtime import RealtimeDataConnection
 from settrade_v2.user import Investor, MarketRep, _BaseUser
 
@@ -24,9 +22,10 @@ from .entity import (
     EquityPortfolio,
     EquityTrade,
     PortfolioResponse,
-    StockQuoteResponse,
 )
 from .realtime import BidOfferSubscriber, PriceInfoSubscriber
+
+logger = logging.getLogger(__name__)
 
 # Override _BaseUser.RealtimeDataConnection
 # because subscribe will error if init RealtimeDataConnection more than once
@@ -61,9 +60,7 @@ class ExecuteContext:
         self,
         settrade_user: Union[Investor, MarketRep],
         account_no: str,
-        symbol: str,
         pin: Optional[str] = None,
-        signal: Any = None,
     ):
         """Execute context.
 
@@ -73,45 +70,17 @@ class ExecuteContext:
             Settrade user
         account_no : str
             Account number
-        symbol : str
-            Selected symbol
         pin : Optional[str], optional
             PIN. Only for investor.
-        signal : Any, optional
-            Signal, by default None
         """
         self.settrade_user = settrade_user
         self.account_no = account_no
-        self.symbol = symbol
         self.pin = pin
-        self.signal = signal
 
     @property
     def ts(self) -> datetime:
         """Current timestamp."""
         return datetime.now()
-
-    """
-    Price functions
-    """
-
-    @property
-    def market_price(self) -> Optional[float]:
-        """Market price.
-
-        Return 0 at pre-open session.
-        """
-        return self._po_sub.data.last
-
-    @property
-    def best_bid_price(self) -> float:
-        """Best bid price."""
-        return self._bo_sub.data.best_bid_price
-
-    @property
-    def best_ask_price(self) -> float:
-        """Best ask price."""
-        return self._bo_sub.data.best_ask_price
 
     """
     Account functions
@@ -148,42 +117,126 @@ class ExecuteContext:
         return self.cash_balance
 
     """
-    Position functions
+    Cancel order functions
     """
 
-    @property
-    def volume(self) -> float:
-        """Actual volume."""
-        ps = self.get_portfolio_symbol()
-        return ps.actual_volume if ps else 0
+    def cancel_orders(
+        self, condition: Callable[[EquityOrder], bool] = lambda _: True
+    ) -> List[CancelOrder]:
+        """Cancel orders.
 
-    @property
-    def cost_price(self) -> float:
-        """Cost price.
+        Parameters
+        ----------
+        condition: Callable[[dict], bool]
+            condition function
 
-        return 0.0 if no position.
+        Returns
+        -------
+        dict
+            cancel order result
         """
-        ps = self.get_portfolio_symbol()
-        return ps.average_price if ps else 0.0
+        orders = self.get_orders(lambda x: x.can_cancel and condition(x))
+        order_no_list = [i.order_no for i in orders]
+        return self._cancel_orders(order_no_list)
 
-    @property
-    def cost_value(self) -> float:
-        """Cost value."""
-        ps = self.get_portfolio_symbol()
-        return ps.amount if ps else 0.0
+    def cancel_buy_orders(self) -> List[CancelOrder]:
+        """Cancel all buy orders."""
+        return self.cancel_orders(lambda x: x.side.capitalize() == SIDE_BUY)
 
-    @property
-    def market_value(self) -> float:
-        """Market value of symbol in portfolio."""
-        ps = self.get_portfolio_symbol()
-        return ps.market_value if ps else 0.0
+    def cancel_sell_orders(self) -> List[CancelOrder]:
+        """Cancel all sell orders."""
+        return self.cancel_orders(lambda x: x.side.capitalize() == SIDE_SELL)
+
+    def cancel_price_orders(self, price: float) -> List[CancelOrder]:
+        """Cancel all orders with price."""
+        return self.cancel_orders(lambda x: x.price == price)
+
+    def _cancel_orders(self, order_no_list: List[str]) -> List[CancelOrder]:
+        if not order_no_list:
+            return []
+
+        res = self._settrade_equity.cancel_orders(
+            order_no_list=order_no_list, **self._pin_acc_no_kw
+        )
+        out = [CancelOrder.from_camel_dict(i) for i in res["results"]]
+
+        for i in out:
+            if i.error_response is not None:
+                logger.warn(
+                    f"Cancel order {i.order_no} failed: {i.error_response['message']}"
+                )
+
+        return out
 
     """
-    Place order functions
+    Settrade SDK functions
+    """
+
+    @property
+    def _acc_no_kw(self) -> dict:
+        return (
+            {"account_no": self.account_no}
+            if isinstance(self.settrade_user, MarketRep)
+            else {}
+        )
+
+    @property
+    def _pin_acc_no_kw(self) -> dict:
+        return (
+            {"account_no": self.account_no}
+            if isinstance(self.settrade_user, MarketRep)
+            else {"pin": self.pin}
+        )
+
+    @property
+    def _settrade_equity(self) -> Union[InvestorEquity, MarketRepEquity]:
+        kw = (
+            {"account_no": self.account_no}
+            if isinstance(self.settrade_user, Investor)
+            else {}
+        )
+        return self.settrade_user.Equity(**kw)
+
+    @property
+    def _settrade_realtime_data_connection(self) -> RealtimeDataConnection:
+        return self.settrade_user.RealtimeDataConnection()
+
+    def get_account_info(self) -> BaseAccountInfo:
+        """Get account info."""
+        res = self._settrade_equity.get_account_info(**self._acc_no_kw)
+        return BaseAccountInfo.from_camel_dict(res)
+
+    def get_portfolios(self) -> PortfolioResponse:
+        """Get portfolios."""
+        res: Dict[str, Any] = self._settrade_equity.get_portfolios(**self._acc_no_kw)  # type: ignore
+        return PortfolioResponse.from_camel_dict(res)
+
+    def get_orders(self, condition: Callable = lambda _: True) -> List[EquityOrder]:
+        """Get orders."""
+        if isinstance(self._settrade_equity, InvestorEquity):
+            res = self._settrade_equity.get_orders()
+        else:
+            res = self._settrade_equity.get_orders_by_account_no(
+                account_no=self.account_no
+            )
+        out = [EquityOrder.from_camel_dict(i) for i in res]
+        out = self._filter_list(out, condition)
+        return out
+
+    def get_trades(self, condition: Callable = lambda _: True) -> List[EquityTrade]:
+        """Get trades."""
+        res = self._settrade_equity.get_trades(**self._acc_no_kw)
+        out = [EquityTrade.from_camel_dict(i) for i in res]
+        out = self._filter_list(out, condition)
+        return out
+
+    """
+    Override functions
     """
 
     def place_order(
         self,
+        symbol: str,
         side: SIDE_TYPE,
         volume: float,
         price: float,
@@ -203,7 +256,7 @@ class ExecuteContext:
             return
 
         res = self._settrade_equity.place_order(
-            symbol=self.symbol,
+            symbol=symbol,
             side=side,
             volume=volume,
             price=price,
@@ -216,6 +269,96 @@ class ExecuteContext:
             **self._pin_acc_no_kw,
         )
         return EquityOrder.from_camel_dict(res)
+
+    def _filter_list(self, l: List[T], condition: Callable = lambda _: True) -> List[T]:
+        """Filter list by symbol and condition."""
+        return [i for i in l if condition(i)]
+
+
+class ExecuteContextSymbol(ExecuteContext):
+    def __init__(
+        self,
+        settrade_user: Union[Investor, MarketRep],
+        account_no: str,
+        symbol: str,
+        pin: Optional[str] = None,
+        signal: Any = None,
+    ):
+        """Execute context.
+
+        Parameters
+        ----------
+        settrade_user : Union[Investor, MarketRep]
+            Settrade user
+        account_no : str
+            Account number
+        symbol : str
+            Selected symbol
+        pin : Optional[str], optional
+            PIN. Only for investor.
+        signal : Any, optional
+            Signal, by default None
+        """
+        super().__init__(settrade_user=settrade_user, account_no=account_no, pin=pin)
+        self.symbol = symbol
+        self.signal = signal
+
+    """
+    Price functions
+    """
+
+    @property
+    def market_price(self) -> Optional[float]:
+        """Market price.
+
+        Return 0 at pre-open session.
+        """
+        return self._po_sub.data.last
+
+    @property
+    def best_bid_price(self) -> float:
+        """Best bid price."""
+        return self._bo_sub.data.best_bid_price
+
+    @property
+    def best_ask_price(self) -> float:
+        """Best ask price."""
+        return self._bo_sub.data.best_ask_price
+
+    """
+    Position functions
+    """
+
+    @property
+    def volume(self) -> float:
+        """Actual volume."""
+        ps = self.get_portfolio()
+        return ps.actual_volume if ps else 0
+
+    @property
+    def cost_price(self) -> float:
+        """Cost price.
+
+        return 0.0 if no position.
+        """
+        ps = self.get_portfolio()
+        return ps.average_price if ps else 0.0
+
+    @property
+    def cost_value(self) -> float:
+        """Cost value."""
+        ps = self.get_portfolio()
+        return ps.amount if ps else 0.0
+
+    @property
+    def market_value(self) -> float:
+        """Market value of symbol in portfolio."""
+        ps = self.get_portfolio()
+        return ps.market_value if ps else 0.0
+
+    """
+    Place order functions
+    """
 
     def buy(self, volume: float, price: float) -> Optional[EquityOrder]:
         """Place buy order."""
@@ -300,58 +443,6 @@ class ExecuteContext:
             return self.sell_value(-value)
 
     """
-    Cancel order functions
-    """
-
-    def cancel_orders_symbol(
-        self, condition: Callable[[EquityOrder], bool] = lambda x: True
-    ) -> List[CancelOrder]:
-        """Cancel all orders with this symbol.
-
-        Parameters
-        ----------
-        condition: Callable[[dict], bool]
-            condition function
-
-        Returns
-        -------
-        dict
-            cancel order result
-        """
-        orders = self.get_orders_symbol(condition)
-        order_no_list = [i.order_no for i in orders if i.can_cancel]
-        return self._cancel_orders(order_no_list)
-
-    def cancel_buy_orders_symbol(self) -> List[CancelOrder]:
-        """Cancel all buy orders with this symbol."""
-        return self.cancel_orders_symbol(lambda x: x.side.capitalize() == SIDE_BUY)
-
-    def cancel_sell_orders_symbol(self) -> List[CancelOrder]:
-        """Cancel all sell orders with this symbol."""
-        return self.cancel_orders_symbol(lambda x: x.side.capitalize() == SIDE_SELL)
-
-    def cancel_price_orders_symbol(self, price: float) -> List[CancelOrder]:
-        """Cancel all orders with this symbol and price."""
-        return self.cancel_orders_symbol(lambda x: x.price == price)
-
-    def _cancel_orders(self, order_no_list: List[str]) -> List[CancelOrder]:
-        if not order_no_list:
-            return []
-
-        res = self._settrade_equity.cancel_orders(
-            order_no_list=order_no_list, **self._pin_acc_no_kw
-        )
-        out = [CancelOrder.from_camel_dict(i) for i in res["results"]]
-
-        for i in out:
-            if i.error_response is not None:
-                warnings.warn(
-                    f"Cancel order {i.order_no} failed: {i.error_response['message']}"
-                )
-
-        return out
-
-    """
     Validate order functions
     """
 
@@ -385,39 +476,6 @@ class ExecuteContext:
     Settrade SDK functions
     """
 
-    @property
-    def _acc_no_kw(self) -> dict:
-        return (
-            {"account_no": self.account_no}
-            if isinstance(self.settrade_user, MarketRep)
-            else {}
-        )
-
-    @property
-    def _pin_acc_no_kw(self) -> dict:
-        return (
-            {"account_no": self.account_no}
-            if isinstance(self.settrade_user, MarketRep)
-            else {"pin": self.pin}
-        )
-
-    @property
-    def _settrade_equity(self) -> Union[InvestorEquity, MarketRepEquity]:
-        kw = (
-            {"account_no": self.account_no}
-            if isinstance(self.settrade_user, Investor)
-            else {}
-        )
-        return self.settrade_user.Equity(**kw)
-
-    @property
-    def _settrade_market_data(self) -> MarketData:
-        return self.settrade_user.MarketData()
-
-    @property
-    def _settrade_realtime_data_connection(self) -> RealtimeDataConnection:
-        return self.settrade_user.RealtimeDataConnection()
-
     @cached_property
     def _bo_sub(self) -> BidOfferSubscriber:
         return BidOfferSubscriber(
@@ -430,49 +488,7 @@ class ExecuteContext:
             symbol=self.symbol, rt_conn=self._settrade_realtime_data_connection
         )
 
-    # TODO: remove if unused
-    def get_candlestick_df(self, limit: int = 5) -> pd.DataFrame:
-        """Get candlestick data.
-
-        Columns: ["lastSequence", "time", "open", "high", "low", "close", "volume", "value"]
-
-        Example
-        -------
-        Pre-open
-        >>>     lastSequence                      time  open  ...  close    volume         value
-        ... 0              0 2023-01-10 00:00:00+07:00  75.5  ...  75.25  29748824  2.234758e+09
-        ... 1              0 2023-01-11 00:00:00+07:00  75.0  ...  74.25  42858395  3.189858e+09
-        ... 2              0 2023-01-12 00:00:00+07:00  74.0  ...  74.00  33256792  2.466415e+09
-        ... 3              0 2023-01-13 00:00:00+07:00  74.0  ...  73.50  41266018  3.042763e+09
-        ... 4              0 2023-01-25 00:00:00+07:00  70.0  ...  70.00   2001000  1.500700e+08
-        """
-        df = pd.DataFrame(
-            self._settrade_market_data.get_candlestick(
-                symbol=self.symbol, interval="1d", limit=limit
-            )
-        )
-        df["time"] = pd.to_datetime(df["time"], unit="s", utc=True).dt.tz_convert(
-            "Asia/Bangkok"
-        )
-        return df
-
-    # TODO: remove if unused
-    def get_quote_symbol(self) -> StockQuoteResponse:
-        """Get quote symbol."""
-        res = self._settrade_market_data.get_quote_symbol(symbol=self.symbol)
-        return StockQuoteResponse.from_camel_dict(res)
-
-    def get_account_info(self) -> BaseAccountInfo:
-        """Get account info."""
-        res = self._settrade_equity.get_account_info(**self._acc_no_kw)
-        return BaseAccountInfo.from_camel_dict(res)
-
-    def get_portfolios(self) -> PortfolioResponse:
-        """Get portfolio."""
-        res: Dict[str, Any] = self._settrade_equity.get_portfolios(**self._acc_no_kw)  # type: ignore
-        return PortfolioResponse.from_camel_dict(res)
-
-    def get_portfolio_symbol(self) -> Optional[EquityPortfolio]:
+    def get_portfolio(self) -> Optional[EquityPortfolio]:
         """Get portfolio of the symbol."""
         res = self.get_portfolios()
         for i in res.portfolio_list:
@@ -480,28 +496,41 @@ class ExecuteContext:
                 return i
         return None
 
-    def get_orders_symbol(
-        self, condition: Callable[[EquityOrder], bool] = lambda x: True
-    ) -> List[EquityOrder]:
-        """Get order of the symbol."""
-        if isinstance(self._settrade_equity, InvestorEquity):
-            out = self._settrade_equity.get_orders()
-        else:
-            out = self._settrade_equity.get_orders_by_account_no(
-                account_no=self.account_no
-            )
-        out = [EquityOrder.from_camel_dict(i) for i in out]
-        out = self._filter_list(out, condition)
-        return out
+    """
+    Override functions
+    """
 
-    def get_trades_symbol(
-        self, condition: Callable[[EquityTrade], bool] = lambda x: True
-    ) -> List[EquityTrade]:
-        out = self._settrade_equity.get_trades(**self._acc_no_kw)
-        out = [EquityTrade.from_camel_dict(i) for i in out]
-        out = self._filter_list(out, condition)
-        return out
+    def place_order(
+        self,
+        side: SIDE_TYPE,
+        volume: float,
+        price: float,
+        qty_open: int = 0,
+        trustee_id_type: str = "Local",
+        price_type: PRICE_TYPE = "Limit",
+        validity_type: VALIDITY_TYPE = "Day",
+        bypass_warning: Optional[bool] = True,
+        valid_till_date: Optional[str] = None,
+    ) -> Optional[EquityOrder]:
+        """Place order.
 
-    def _filter_list(self, l: List[T], condition: Callable = lambda x: True) -> List[T]:
+        Round volume to 100. If volume is 0, return None.
+        """
+        return super().place_order(
+            symbol=self.symbol,
+            side=side,
+            volume=volume,
+            price=price,
+            qty_open=qty_open,
+            trustee_id_type=trustee_id_type,
+            price_type=price_type,
+            validity_type=validity_type,
+            bypass_warning=bypass_warning,
+            valid_till_date=valid_till_date,
+        )
+
+    def _filter_list(self, l: List[T], condition: Callable = lambda _: True) -> List[T]:
         """Filter list by symbol and condition."""
-        return [i for i in l if i.symbol == self.symbol and condition(i)]  # type: ignore
+        return super()._filter_list(
+            l, lambda x: x.symbol == self.symbol and condition(x)
+        )
