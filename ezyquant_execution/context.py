@@ -1,6 +1,5 @@
 import time as t
 import warnings
-from dataclasses import dataclass
 from datetime import datetime
 from functools import cached_property, lru_cache
 from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
@@ -57,21 +56,35 @@ def new_refresh(self):
 Context.refresh = new_refresh
 
 
-@dataclass
 class ExecuteContext:
-    settrade_user: Union[Investor, MarketRep]
-    """Settrade user."""
-    account_no: str
-    """Account number."""
-    symbol: str
-    """Selected symbol."""
-    signal: Any = None
-    """Signal."""
-    pin: Optional[str] = None
-    """PIN.
+    def __init__(
+        self,
+        settrade_user: Union[Investor, MarketRep],
+        account_no: str,
+        symbol: str,
+        pin: Optional[str] = None,
+        signal: Any = None,
+    ):
+        """Execute context.
 
-    Only for investor.
-    """
+        Parameters
+        ----------
+        settrade_user : Union[Investor, MarketRep]
+            Settrade user
+        account_no : str
+            Account number
+        symbol : str
+            Selected symbol
+        pin : Optional[str], optional
+            PIN. Only for investor.
+        signal : Any, optional
+            Signal, by default None
+        """
+        self.settrade_user = settrade_user
+        self.account_no = account_no
+        self.symbol = symbol
+        self.pin = pin
+        self.signal = signal
 
     @property
     def ts(self) -> datetime:
