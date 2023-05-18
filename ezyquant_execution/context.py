@@ -77,6 +77,9 @@ class ExecuteContext:
         self.account_no = account_no
         self.pin = pin
 
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
     @property
     def ts(self) -> datetime:
         """Current timestamp."""
