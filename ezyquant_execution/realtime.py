@@ -1,4 +1,4 @@
-from threading import Event
+from threading import Event, Timer
 from typing import Callable, Optional
 
 from settrade_v2.realtime import RealtimeDataConnection, Subscriber
@@ -21,6 +21,10 @@ class SettradeSubscriber:
             on_message=self._on_message, *self.args, **self.kwargs
         )
         self._subscriber.start()
+        # Stop after 12 hours
+        timer = Timer(12 * 60 * 60, self._subscriber.stop)
+        timer.daemon = True
+        timer.start()
 
         # wait for first data to be received
         if not self._event.wait(timeout=30):
