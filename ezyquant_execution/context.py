@@ -93,7 +93,10 @@ class ExecuteContext:
 
     @property
     def line_available(self) -> float:
-        """Line Available."""
+        """Line Available.
+
+        When place order line available will be decrease by order value.
+        """
         return self.get_account_info().line_available
 
     @property
@@ -103,17 +106,26 @@ class ExecuteContext:
 
     @property
     def total_cost_value(self) -> float:
-        """Sum of all stock market value in portfolio."""
+        """Sum of all stock cost value in portfolio.
+
+        Include order that pending.
+        """
         return self.get_portfolios().total_portfolio.amount
 
     @property
     def total_market_value(self) -> float:
-        """Sum of all stock cost value in portfolio."""
+        """Sum of all stock market value in portfolio.
+
+        Include order that pending.
+        """
         return self.get_portfolios().total_portfolio.market_value
 
     @property
     def pending_order_value(self) -> float:
-        """Sum of all pending order value."""
+        """Sum of all pending order value.
+
+        Not include commission.
+        """
         return sum(i.price * i.vol for i in self.get_orders(_is_pending_order))
 
     @property
