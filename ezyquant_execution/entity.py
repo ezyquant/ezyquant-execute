@@ -26,6 +26,107 @@ VALIDITY_TYPE_DATE = "Date"
 VALIDITY_TYPE_CANCEL = "Cancel"
 VALIDITY_TYPE = Literal["Day", "FOK", "IOC", "Date", "Cancel"]
 
+# Key is data from RealtimeDataConnection.subscribe_price_info
+# Value is display data from MarketData.get_quote_symbol
+MARKET_STATUS_DICT = {
+    "CLOSE_E": "Close",
+    "STARTUP_E": "Close",
+    "PRE_OPEN1_E": "Pre-Open1",
+    "PRE_OPEN_E": "Pre-Open",
+    "FREEZE1_E": "Freeze1",
+    "OPEN1_E": "Open1",
+    "OPEN_E": "Open",
+    "INTERMISSION_E": "Intermission1",
+    "PRE_OPEN2_E": "Pre-Open2",
+    "FREEZE2_E": "Freeze2",
+    "OPEN2_E": "Open2",
+    "PRE_CLOSE_E": "Pre-Close",
+    "FREEZE3_E": "Freeze3",
+    "OFF_HOUR_E": "OffHour",
+    "MARKETCLOSE_E": "Close",
+    "SAVECLOSING_E": "Close",
+    "RESET_STAT_E": "Close",
+    "PRE_OPEN_CB_E": "Pre-Open",
+    "CIRCUIT_BREAKER_E": "Circuit Breaker",
+    "FULLHALT_E": "Full Halt",
+}
+
+MARKET_STATUS_CLOSE_E = "CLOSE_E"
+MARKET_STATUS_STARTUP_E = "STARTUP_E"
+MARKET_STATUS_PRE_OPEN1_E = "PRE_OPEN1_E"
+MARKET_STATUS_PRE_OPEN_E = "PRE_OPEN_E"
+MARKET_STATUS_FREEZE1_E = "FREEZE1_E"
+MARKET_STATUS_OPEN1_E = "OPEN1_E"
+MARKET_STATUS_OPEN_E = "OPEN_E"
+MARKET_STATUS_INTERMISSION_E = "INTERMISSION_E"
+MARKET_STATUS_PRE_OPEN2_E = "PRE_OPEN2_E"
+MARKET_STATUS_FREEZE2_E = "FREEZE2_E"
+MARKET_STATUS_OPEN2_E = "OPEN2_E"
+MARKET_STATUS_PRE_CLOSE_E = "PRE_CLOSE_E"
+MARKET_STATUS_FREEZE3_E = "FREEZE3_E"
+MARKET_STATUS_OFF_HOUR_E = "OFF_HOUR_E"
+MARKET_STATUS_MARKETCLOSE_E = "MARKETCLOSE_E"
+MARKET_STATUS_SAVECLOSING_E = "SAVECLOSING_E"
+MARKET_STATUS_RESET_STAT_E = "RESET_STAT_E"
+MARKET_STATUS_PRE_OPEN_CB_E = "PRE_OPEN_CB_E"
+MARKET_STATUS_CIRCUIT_BREAKER_E = "CIRCUIT_BREAKER_E"
+MARKET_STATUS_FULLHALT_E = "FULLHALT_E"
+MARKET_STATUS_TYPE = Literal[
+    "CLOSE_E",
+    "STARTUP_E",
+    "PRE_OPEN1_E",
+    "PRE_OPEN_E",
+    "FREEZE1_E",
+    "OPEN1_E",
+    "OPEN_E",
+    "INTERMISSION_E",
+    "PRE_OPEN2_E",
+    "FREEZE2_E",
+    "OPEN2_E",
+    "PRE_CLOSE_E",
+    "FREEZE3_E",
+    "OFF_HOUR_E",
+    "MARKETCLOSE_E",
+    "SAVECLOSING_E",
+    "RESET_STAT_E",
+    "PRE_OPEN_CB_E",
+    "CIRCUIT_BREAKER_E",
+    "FULLHALT_E",
+]
+
+MARKET_STATUS_DISPLAY_CLOSE = "Close"
+MARKET_STATUS_DISPLAY_PRE_OPEN1 = "Pre-Open1"
+MARKET_STATUS_DISPLAY_PRE_OPEN = "Pre-Open"
+MARKET_STATUS_DISPLAY_FREEZE1 = "Freeze1"
+MARKET_STATUS_DISPLAY_OPEN1 = "Open1"
+MARKET_STATUS_DISPLAY_OPEN = "Open"
+MARKET_STATUS_DISPLAY_INTERMISSION1 = "Intermission1"
+MARKET_STATUS_DISPLAY_PRE_OPEN2 = "Pre-Open2"
+MARKET_STATUS_DISPLAY_FREEZE2 = "Freeze2"
+MARKET_STATUS_DISPLAY_OPEN2 = "Open2"
+MARKET_STATUS_DISPLAY_PRE_CLOSE = "Pre-Close"
+MARKET_STATUS_DISPLAY_FREEZE3 = "Freeze3"
+MARKET_STATUS_DISPLAY_OFF_HOUR = "OffHour"
+MARKET_STATUS_DISPLAY_CIRCUIT_BREAKER = "Circuit Breaker"
+MARKET_STATUS_DISPLAY_FULL_HALT = "Full Halt"
+MARKET_STATUS_DISPLAY_TYPE = Literal[
+    "Close",
+    "Pre-Open1",
+    "Pre-Open",
+    "Freeze1",
+    "Open1",
+    "Open",
+    "Intermission1",
+    "Pre-Open2",
+    "Freeze2",
+    "Open2",
+    "Pre-Close",
+    "Freeze3",
+    "OffHour",
+    "Circuit Breaker",
+    "Full Halt",
+]
+
 
 class SettradeStruct:
     @classmethod
@@ -50,6 +151,7 @@ class StockQuoteResponse(SettradeStruct):
     average: float
     change: float
     percent_change: float
+    market_status: MARKET_STATUS_DISPLAY_TYPE
     total_volume: int
     security_type: str
     eps: float
@@ -137,7 +239,7 @@ class PriceInfo(SettradeStruct):
     change: float
     total_volume: float
     total_value: float
-    market_status: str
+    market_status: MARKET_STATUS_TYPE
 
     def __post_init__(self):
         for i in ["projected_open_price", "high", "low", "last"]:
