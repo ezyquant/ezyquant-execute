@@ -443,7 +443,6 @@ class ExecuteContext:
         )
         return df
 
-    # TODO: remove if unused
     def get_quote_symbol(self) -> StockQuoteResponse:
         """Get quote symbol."""
         res = self._settrade_market_data.get_quote_symbol(symbol=self.symbol)
