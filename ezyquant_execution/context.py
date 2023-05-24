@@ -2,7 +2,7 @@ import logging
 import time as t
 from datetime import datetime
 from functools import cached_property, lru_cache
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, TypeVar, Union
 
 from settrade_v2.context import Context
 from settrade_v2.equity import InvestorEquity, MarketRepEquity
@@ -37,6 +37,8 @@ _BaseUser.RealtimeDataConnection = lru_cache(maxsize=1)(
 )
 
 T = TypeVar("T")
+
+PLACE_ORDER_MODE_TYPE = Literal["none", "skip", "raise", "available"]
 
 
 def new_refresh(self):
@@ -280,12 +282,13 @@ class ExecuteContext:
         validity_type: VALIDITY_TYPE = "Day",
         bypass_warning: Optional[bool] = True,
         valid_till_date: Optional[str] = None,
+        is_round_up_volume: bool = False,
     ) -> Optional[EquityOrder]:
         """Place order.
 
         Round volume to 100. If volume is 0, return None.
         """
-        volume = utils.round_100(volume)
+        volume = utils.round_100(volume, is_round_up_volume)
         if volume == 0:
             return
 
@@ -399,15 +402,15 @@ class ExecuteContextSymbol(ExecuteContext):
     Place order functions
     """
 
-    def buy(self, volume: float, price: float) -> Optional[EquityOrder]:
+    def buy(self, volume: float, price: float, **kwargs) -> Optional[EquityOrder]:
         """Place buy order."""
-        return self.place_order(side=SIDE_BUY, volume=volume, price=price)
+        return self.place_order(side=SIDE_BUY, volume=volume, price=price, **kwargs)
 
-    def sell(self, volume: float, price: float) -> Optional[EquityOrder]:
+    def sell(self, volume: float, price: float, **kwargs) -> Optional[EquityOrder]:
         """Place sell order."""
-        return self.place_order(side=SIDE_SELL, volume=volume, price=price)
+        return self.place_order(side=SIDE_SELL, volume=volume, price=price, **kwargs)
 
-    def buy_pct_port(self, pct_port: float) -> Optional[EquityOrder]:
+    def buy_pct_port(self, pct_port: float, **kwargs) -> Optional[EquityOrder]:
         """Buy from the percentage of the portfolio. calculate the buy volume by pct_port * port_value / best ask price.
 
         Parameters
@@ -415,9 +418,9 @@ class ExecuteContextSymbol(ExecuteContext):
         pct_port: float
             percentage of the portfolio
         """
-        return self.buy_value(self.port_value * pct_port)
+        return self.buy_value(self.port_value * pct_port, **kwargs)
 
-    def buy_value(self, value: float) -> Optional[EquityOrder]:
+    def buy_value(self, value: float, **kwargs) -> Optional[EquityOrder]:
         """Buy from the given value. calculate the buy volume by value / best
         ask price.
 
@@ -428,18 +431,18 @@ class ExecuteContextSymbol(ExecuteContext):
         """
         price = self.best_ask_price
         volume = value / price
-        return self.buy(volume=volume, price=price)
+        return self.buy(volume=volume, price=price, **kwargs)
 
-    def sell_pct_port(self, pct_port: float) -> Optional[EquityOrder]:
+    def sell_pct_port(self, pct_port: float, **kwargs) -> Optional[EquityOrder]:
         """Sell from the percentage of the portfolio. calculate the sell volume by pct_port * port_value / best ask price.
         Parameters
         ----------
         pct_port: float
             percentage of the portfolio
         """
-        return self.sell_value(self.port_value * pct_port)
+        return self.sell_value(self.port_value * pct_port, **kwargs)
 
-    def sell_value(self, value: float) -> Optional[EquityOrder]:
+    def sell_value(self, value: float, **kwargs) -> Optional[EquityOrder]:
         """Sell from the given value. calculate the sell volume by value / best
         bid price.
 
@@ -450,9 +453,9 @@ class ExecuteContextSymbol(ExecuteContext):
         """
         price = self.best_bid_price
         volume = value / price
-        return self.sell(volume=volume, price=price)
+        return self.sell(volume=volume, price=price, **kwargs)
 
-    def target_pct_port(self, pct_port: float) -> Optional[EquityOrder]:
+    def target_pct_port(self, pct_port: float, **kwargs) -> Optional[EquityOrder]:
         """Buy/Sell to make the current position reach the target percentage of
         the portfolio. Calculate the buy/sell volume by compare between the
         best bid/ask price.
@@ -462,9 +465,9 @@ class ExecuteContextSymbol(ExecuteContext):
         pct_port: float
             percentage of the portfolio
         """
-        return self.target_value(self.port_value * pct_port)
+        return self.target_value(self.port_value * pct_port, **kwargs)
 
-    def target_value(self, value: float) -> Optional[EquityOrder]:
+    def target_value(self, value: float, **kwargs) -> Optional[EquityOrder]:
         """Buy/Sell to make the current position reach the target value.
         Calculate the buy/sell volume by compare between the best bid/ask
         price.
@@ -477,9 +480,9 @@ class ExecuteContextSymbol(ExecuteContext):
         value -= self.market_value
 
         if value > 0:
-            return self.buy_value(value)
+            return self.buy_value(value, **kwargs)
         else:
-            return self.sell_value(-value)
+            return self.sell_value(-value, **kwargs)
 
     """
     Validate order functions
@@ -546,11 +549,31 @@ class ExecuteContextSymbol(ExecuteContext):
         validity_type: VALIDITY_TYPE = "Day",
         bypass_warning: Optional[bool] = True,
         valid_till_date: Optional[str] = None,
+        is_round_up_volume: bool = False,
+        mode: PLACE_ORDER_MODE_TYPE = "none",
     ) -> Optional[EquityOrder]:
         """Place order.
 
         Round volume to 100. If volume is 0, return None.
         """
+        # TODO: Test each mode
+        if mode != "none":
+            if side == SIDE_BUY:
+                max_volume = self.line_available / price
+            else:
+                max_volume = self.volume
+
+            if max_volume < volume:
+                if mode == "skip":
+                    logger.warn(f"{side} {volume} is not sufficient")
+                    return
+                elif mode == "raise":
+                    raise ValueError(f"{side} {volume} is not sufficient")
+                elif mode == "available":
+                    logger.warn(f"{side} {volume} is not sufficient use {max_volume}")
+                    volume = max_volume
+                    is_round_up_volume = False
+
         return super().place_order(
             symbol=self.symbol,
             side=side,
@@ -562,6 +585,7 @@ class ExecuteContextSymbol(ExecuteContext):
             validity_type=validity_type,
             bypass_warning=bypass_warning,
             valid_till_date=valid_till_date,
+            is_round_up_volume=is_round_up_volume,
         )
 
     def get_quote_symbol(self) -> StockQuoteResponse:
