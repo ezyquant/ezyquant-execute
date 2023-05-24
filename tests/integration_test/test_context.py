@@ -168,3 +168,7 @@ class TestExecuteContextSymbol:
             valid_till_date=None,
         )
         print(actual)
+
+    def test_get_quote_symbol(self, exe_ctx_symbol: ExecuteContextSymbol):
+        actual = exe_ctx_symbol.get_quote_symbol()
+        print(actual)
