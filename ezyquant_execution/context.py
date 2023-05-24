@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 
 from settrade_v2.context import Context
 from settrade_v2.equity import InvestorEquity, MarketRepEquity
+from settrade_v2.market import MarketData
 from settrade_v2.realtime import RealtimeDataConnection
 from settrade_v2.user import Investor, MarketRep, _BaseUser
 
@@ -22,6 +23,7 @@ from .entity import (
     EquityPortfolio,
     EquityTrade,
     PortfolioResponse,
+    StockQuoteResponse,
 )
 from .realtime import BidOfferSubscriber, PriceInfoSubscriber
 
@@ -201,6 +203,10 @@ class ExecuteContext:
         return self.settrade_user.Equity(**kw)
 
     @property
+    def _settrade_market_data(self) -> MarketData:
+        return self.settrade_user.MarketData()
+
+    @property
     def _settrade_realtime_data_connection(self) -> RealtimeDataConnection:
         return self.settrade_user.RealtimeDataConnection()
 
@@ -237,6 +243,14 @@ class ExecuteContext:
     Override functions
     """
 
+    def get_portfolio(self, symbol: str) -> Optional[EquityPortfolio]:
+        """Get portfolio of the symbol."""
+        res = self.get_portfolios()
+        for i in res.portfolio_list:
+            if i.symbol == symbol:
+                return i
+        return None
+
     def place_order(
         self,
         symbol: str,
@@ -272,6 +286,11 @@ class ExecuteContext:
             **self._pin_acc_no_kw,
         )
         return EquityOrder.from_camel_dict(res)
+
+    def get_quote_symbol(self, symbol: str) -> StockQuoteResponse:
+        """Get quote symbol."""
+        res = self._settrade_market_data.get_quote_symbol(symbol=symbol)
+        return StockQuoteResponse.from_camel_dict(res)
 
     def _filter_list(self, l: List[T], condition: Callable = lambda _: True) -> List[T]:
         """Filter list by symbol and condition."""
@@ -491,17 +510,13 @@ class ExecuteContextSymbol(ExecuteContext):
             symbol=self.symbol, rt_conn=self._settrade_realtime_data_connection
         )
 
-    def get_portfolio(self) -> Optional[EquityPortfolio]:
-        """Get portfolio of the symbol."""
-        res = self.get_portfolios()
-        for i in res.portfolio_list:
-            if i.symbol == self.symbol:
-                return i
-        return None
-
     """
     Override functions
     """
+
+    def get_portfolio(self) -> Optional[EquityPortfolio]:
+        """Get portfolio of the symbol."""
+        return super().get_portfolio(self.symbol)
 
     def place_order(
         self,
@@ -531,6 +546,10 @@ class ExecuteContextSymbol(ExecuteContext):
             bypass_warning=bypass_warning,
             valid_till_date=valid_till_date,
         )
+
+    def get_quote_symbol(self) -> StockQuoteResponse:
+        """Get quote symbol."""
+        return super().get_quote_symbol(self.symbol)
 
     def _filter_list(self, l: List[T], condition: Callable = lambda _: True) -> List[T]:
         """Filter list by symbol and condition."""
