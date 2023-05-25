@@ -625,10 +625,10 @@ class ExecuteContextSymbol(ExecuteContext):
         """
         if mode != "none":
             if side == SIDE_BUY:
-                try:
+                if price == 0:
+                    max_volume = self.line_available / self.best_ask_price
+                else:
                     max_volume = self.line_available / price
-                except ZeroDivisionError:
-                    raise ValueError("Price is required when mode is not none")
             else:
                 max_volume = self.current_volume
 
