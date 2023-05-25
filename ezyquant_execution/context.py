@@ -84,6 +84,15 @@ class ExecuteContext:
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
+    @lru_cache
+    def Symbol(self, symbol: str) -> "ExecuteContextSymbol":
+        return ExecuteContextSymbol(
+            settrade_user=self.settrade_user,
+            symbol=symbol,
+            account_no=self.account_no,
+            pin=self.pin,
+        )
+
     @property
     def ts(self) -> datetime:
         """Current timestamp."""
@@ -573,6 +582,8 @@ class ExecuteContextSymbol(ExecuteContext):
                     logger.warn(f"{side} {volume} is not sufficient use {max_volume}")
                     volume = max_volume
                     is_round_up_volume = False
+                else:
+                    raise ValueError(f"Invalid mode {mode}")
 
         return super().place_order(
             symbol=self.symbol,
