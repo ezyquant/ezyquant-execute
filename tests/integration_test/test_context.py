@@ -1,5 +1,6 @@
 import pytest
-from settrade_v2.user import Investor
+from settrade_v2 import Investor
+from settrade_v2.errors import SettradeError
 
 from ezyquant_execution.context import ExecuteContext, ExecuteContextSymbol
 
@@ -101,6 +102,14 @@ class TestExecuteContextSymbol:
         actual = exe_ctx_symbol.volume
         print(actual)
 
+    def test_actual_volume(self, exe_ctx_symbol: ExecuteContextSymbol):
+        actual = exe_ctx_symbol.actual_volume
+        print(actual)
+
+    def test_current_volume(self, exe_ctx_symbol: ExecuteContextSymbol):
+        actual = exe_ctx_symbol.current_volume
+        print(actual)
+
     def test_cost_price(self, exe_ctx_symbol: ExecuteContextSymbol):
         actual = exe_ctx_symbol.cost_price
         print(actual)
@@ -111,6 +120,14 @@ class TestExecuteContextSymbol:
 
     def test_market_value(self, exe_ctx_symbol: ExecuteContextSymbol):
         actual = exe_ctx_symbol.market_value
+        print(actual)
+
+    def test_profit(self, exe_ctx_symbol: ExecuteContextSymbol):
+        actual = exe_ctx_symbol.profit
+        print(actual)
+
+    def test_percent_profit(self, exe_ctx_symbol: ExecuteContextSymbol):
+        actual = exe_ctx_symbol.percent_profit
         print(actual)
 
     def test_buy(self, exe_ctx_symbol: ExecuteContextSymbol):
@@ -170,9 +187,54 @@ class TestExecuteContextSymbol:
             validity_type="Day",
             bypass_warning=True,
             valid_till_date=None,
+            is_round_up_volume=False,
+            mode="none",
         )
         print(actual)
 
     def test_get_quote_symbol(self, exe_ctx_symbol: ExecuteContextSymbol):
         actual = exe_ctx_symbol.get_quote_symbol()
+        print(actual)
+
+
+class TestPlaceOrderMode:
+    def test_none(self, exe_ctx_symbol: ExecuteContextSymbol):
+        with pytest.raises(SettradeError) as e:
+            exe_ctx_symbol.place_order(
+                side="Sell",
+                volume=10000,
+                price_type="MP-MTL",
+                mode="none",
+            )
+        pattern = r"No stock available for sell \[AOT\]"
+        e.match(pattern)
+
+    def test_raise(self, exe_ctx_symbol: ExecuteContextSymbol):
+        with pytest.raises(ValueError) as e:
+            exe_ctx_symbol.place_order(
+                side="Sell",
+                volume=10000,
+                price_type="MP-MTL",
+                mode="raise",
+            )
+        pattern = r"Sell 10000 is not sufficient"
+        e.match(pattern)
+
+    def test_skip(self, exe_ctx_symbol: ExecuteContextSymbol):
+        actual = exe_ctx_symbol.place_order(
+            side="Sell",
+            volume=10000,
+            price_type="MP-MTL",
+            mode="skip",
+        )
+
+        assert actual == None
+
+    def test_available(self, exe_ctx_symbol: ExecuteContextSymbol):
+        actual = exe_ctx_symbol.place_order(
+            side="Sell",
+            volume=10000,
+            price_type="MP-MTL",
+            mode="available",
+        )
         print(actual)
