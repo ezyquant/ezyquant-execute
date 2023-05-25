@@ -611,8 +611,18 @@ class ExecuteContextSymbol(ExecuteContext):
         """Place order.
 
         Round volume to 100. If volume is 0, return None.
+
+        Parameters
+        ----------
+        side: SIDE_TYPE
+            Buy or sell
+        ...
+        mode: PLACE_ORDER_MODE_TYPE
+            none: no check
+            skip: skip if not insufficient
+            raise: raise error if not insufficient
+            available: use available volume
         """
-        # TODO: Test each mode
         if mode != "none":
             if side == SIDE_BUY:
                 try:
@@ -629,7 +639,7 @@ class ExecuteContextSymbol(ExecuteContext):
                 elif mode == "raise":
                     raise ValueError(f"{side} {volume} is not sufficient")
                 elif mode == "available":
-                    logger.warn(f"{side} {volume} is not sufficient use {max_volume}")
+                    logger.info(f"{side} {volume} is not sufficient use {max_volume}")
                     volume = max_volume
                     is_round_up_volume = False
                 else:
