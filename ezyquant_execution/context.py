@@ -112,7 +112,11 @@ class ExecuteContext:
 
     @property
     def cash_balance(self) -> float:
-        """Cash Balance."""
+        """Cash Balance.
+
+        When place order cash balance will **not** be decrease by order
+        value.
+        """
         return self.get_account_info().cash_balance
 
     @property
@@ -141,7 +145,10 @@ class ExecuteContext:
 
     @property
     def port_value(self) -> float:
-        """Total portfolio value."""
+        """Total portfolio value.
+
+        Line available + Total market value + Pending order value
+        """
         return self.line_available + self.total_market_value + self.pending_order_value
 
     @property
@@ -284,7 +291,7 @@ class ExecuteContext:
         symbol: str,
         side: SIDE_TYPE,
         volume: float,
-        price: float,
+        price: float = 0,
         qty_open: int = 0,
         trustee_id_type: str = "Local",
         price_type: PRICE_TYPE = "Limit",
@@ -383,8 +390,25 @@ class ExecuteContextSymbol(ExecuteContext):
     @property
     def volume(self) -> float:
         """Actual volume."""
+        return self.actual_volume
+
+    @property
+    def actual_volume(self) -> float:
+        """Actual volume. return 0.0 if no position.
+
+        Actual volume will **not** reduce when order is placed.
+        """
         ps = self.get_portfolio()
         return ps.actual_volume if ps else 0
+
+    @property
+    def current_volume(self) -> float:
+        """Current volume. return 0.0 if no position.
+
+        Current volume will reduce when order is placed.
+        """
+        ps = self.get_portfolio()
+        return ps.current_volume if ps else 0
 
     @property
     def cost_price(self) -> float:
@@ -397,25 +421,48 @@ class ExecuteContextSymbol(ExecuteContext):
 
     @property
     def cost_value(self) -> float:
-        """Cost value."""
+        """Cost value.
+
+        return 0.0 if no position.
+        """
         ps = self.get_portfolio()
         return ps.amount if ps else 0.0
 
     @property
     def market_value(self) -> float:
-        """Market value of symbol in portfolio."""
+        """Market value of symbol in portfolio.
+
+        return 0.0 if no position.
+        """
         ps = self.get_portfolio()
         return ps.market_value if ps else 0.0
+
+    @property
+    def profit(self) -> float:
+        """Unrealized Profit (THB).
+
+        return 0.0 if no position.
+        """
+        ps = self.get_portfolio()
+        return ps.profit if ps else 0.0
+
+    def percent_profit(self) -> float:
+        """Unrealized Percent profit. return 0.0 if no position.
+
+        Example 1.0 = 1% profit.
+        """
+        ps = self.get_portfolio()
+        return ps.percent_profit if ps else 0.0
 
     """
     Place order functions
     """
 
-    def buy(self, volume: float, price: float, **kwargs) -> Optional[EquityOrder]:
+    def buy(self, volume: float, price: float = 0, **kwargs) -> Optional[EquityOrder]:
         """Place buy order."""
         return self.place_order(side=SIDE_BUY, volume=volume, price=price, **kwargs)
 
-    def sell(self, volume: float, price: float, **kwargs) -> Optional[EquityOrder]:
+    def sell(self, volume: float, price: float = 0, **kwargs) -> Optional[EquityOrder]:
         """Place sell order."""
         return self.place_order(side=SIDE_SELL, volume=volume, price=price, **kwargs)
 
@@ -551,7 +598,7 @@ class ExecuteContextSymbol(ExecuteContext):
         self,
         side: SIDE_TYPE,
         volume: float,
-        price: float,
+        price: float = 0,
         qty_open: int = 0,
         trustee_id_type: str = "Local",
         price_type: PRICE_TYPE = "Limit",
