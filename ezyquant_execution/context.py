@@ -568,7 +568,7 @@ class ExecuteContextSymbol(ExecuteContext):
         volume: float
             volume
         """
-        return self.volume >= volume
+        return self.current_volume >= volume
 
     """
     Settrade SDK functions
@@ -615,9 +615,12 @@ class ExecuteContextSymbol(ExecuteContext):
         # TODO: Test each mode
         if mode != "none":
             if side == SIDE_BUY:
-                max_volume = self.line_available / price
+                try:
+                    max_volume = self.line_available / price
+                except ZeroDivisionError:
+                    raise ValueError("Price is required when mode is not none")
             else:
-                max_volume = self.volume
+                max_volume = self.current_volume
 
             if max_volume < volume:
                 if mode == "skip":
