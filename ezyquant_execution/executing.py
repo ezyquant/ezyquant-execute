@@ -6,14 +6,14 @@ from typing import Any, Awaitable, Callable, Dict, Optional, Union
 from settrade_v2.user import Investor, MarketRep
 
 from . import utils
-from .context import ExecuteContext
+from .context import ExecuteContextSymbol
 
 
 def execute_on_timer(
     settrade_user: Union[Investor, MarketRep],
     account_no: str,
     signal_dict: Dict[str, Any],
-    on_timer: Callable[[ExecuteContext], None],
+    on_timer: Callable[[ExecuteContextSymbol], None],
     interval: float,
     start_time: time,
     end_time: time,
@@ -34,7 +34,7 @@ def execute_on_timer(
         account number.
     signal_dict : Dict[str, Any]
         signal dictionary. symbol as key and signal as value. this signal will pass to on_timer.
-    on_timer : Callable[[ExecuteContext], None]
+    on_timer : Callable[[ExecuteContextSymbol], None]
         custom function that iterate all symbol in signal_dict.
         if on_timer raise exception, this function will be stopped.
     interval : float
@@ -59,7 +59,7 @@ def execute_on_timer(
 
     try:
         ctx_list = [
-            ExecuteContext(
+            ExecuteContextSymbol(
                 symbol=k,
                 signal=v,
                 settrade_user=settrade_user,
@@ -83,7 +83,7 @@ async def async_execute_on_timer(
     settrade_user: Union[Investor, MarketRep],
     account_no: str,
     signal_dict: Dict[str, Any],
-    on_timer: Callable[[ExecuteContext], Awaitable[None]],
+    on_timer: Callable[[ExecuteContextSymbol], Awaitable[None]],
     interval: float,
     start_time: time,
     end_time: time,
@@ -102,7 +102,7 @@ async def async_execute_on_timer(
 
     try:
         ctx_list = [
-            ExecuteContext(
+            ExecuteContextSymbol(
                 symbol=k,
                 signal=v,
                 settrade_user=settrade_user,

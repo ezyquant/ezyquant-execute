@@ -18,14 +18,14 @@ from ezyquant_execution import utils
         (100, False, 100),
         (101, False, 100),
         # Negative
-        (-1, True, -100),  #
-        (-99, True, -100),  #
+        (-1, True, -100),
+        (-99, True, -100),
         (-100, True, -100),
-        (-101, True, -200),  #
-        (-1, False, 0),  #
-        (-99, False, 0),  #
+        (-101, True, -200),
+        (-1, False, 0),
+        (-99, False, 0),
         (-100, False, -100),
-        (-101, False, -100),  #
+        (-101, False, -100),
     ],
 )
 def test_round_100(value, is_round_up, expected_output):

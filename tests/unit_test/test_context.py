@@ -4,14 +4,14 @@ from unittest.mock import ANY
 
 import pytest
 
-from ezyquant_execution.context import ExecuteContext
+from ezyquant_execution.context import ExecuteContext, ExecuteContextSymbol
 
 SYMBOL = "AOT"
 
 
 @pytest.fixture
 def ctx():
-    return ExecuteContext(
+    return ExecuteContextSymbol(
         settrade_user=ANY,
         account_no=ANY,
         symbol=SYMBOL,
