@@ -84,6 +84,9 @@ class ExecuteContext:
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
+    def __hash__(self):
+        return id(self)
+
     @lru_cache
     def Symbol(self, symbol: str) -> "ExecuteContextSymbol":
         return ExecuteContextSymbol(
