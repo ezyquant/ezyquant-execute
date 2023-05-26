@@ -626,6 +626,8 @@ class ExecuteContextSymbol(ExecuteContext):
             raise: raise error if not insufficient
             available: use available volume
         """
+        volume = utils.round_100(volume, is_round_up_volume)
+
         if mode != "none":
             if side == SIDE_BUY:
                 if price == 0:
