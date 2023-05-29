@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from settrade_v2.user import Investor
 
 from ezyquant_execution import execute_on_timer
-from ezyquant_execution.context import ExecuteContext
+from ezyquant_execution.context import ExecuteContextSymbol
 
 settrade_user = Investor(
     app_id="CfVAuVWUwcP1grkG",
@@ -23,8 +23,8 @@ signal_dict = {
 }
 
 
-def on_timer(ctx: ExecuteContext):
-    ctx.cancel_orders_symbol()
+def on_timer(ctx: ExecuteContextSymbol):
+    ctx.cancel_orders()
     ctx.target_pct_port(ctx.signal)
 
 

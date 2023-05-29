@@ -305,7 +305,7 @@ class EquityPortfolio(SettradeStruct):
     profit: float
     """Profit/Loss"""
     percent_profit: float
-    """Percentage of profit"""
+    """Percentage of profit. For example 1.0 = 1%"""
     realize_profit: float
     """Realized profit/loss"""
     start_volume: float

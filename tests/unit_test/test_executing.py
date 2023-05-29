@@ -4,7 +4,7 @@ from unittest.mock import ANY, Mock
 
 import pytest
 
-from ezyquant_execution.context import ExecuteContext
+from ezyquant_execution.context import ExecuteContextSymbol
 from ezyquant_execution.executing import async_execute_on_timer, execute_on_timer
 from tests.utils import AsyncMock
 
@@ -38,7 +38,7 @@ class TestExecuteOnTimer:
     def _test(
         self,
         signal_dict: Dict[str, Any] = {"a": 1},
-        on_timer: Optional[Callable[[ExecuteContext], None]] = None,
+        on_timer: Optional[Callable[[ExecuteContextSymbol], None]] = None,
         interval: float = 1.0,
         start_time: time = time(0, 0, 0),
         end_time: Optional[time] = None,
@@ -65,7 +65,7 @@ class TestExecuteOnTimer:
                 on_timer.assert_not_called()
             for k, v in signal_dict.items():
                 on_timer.assert_any_call(
-                    ExecuteContext(
+                    ExecuteContextSymbol(
                         settrade_user=ANY,
                         account_no=ANY,
                         pin=ANY,
@@ -97,7 +97,7 @@ async def test_async_execute_on_timer():
     # Check
     for k, v in signal_dict.items():
         on_timer.assert_any_call(
-            ExecuteContext(
+            ExecuteContextSymbol(
                 settrade_user=ANY,
                 account_no=ANY,
                 pin=ANY,
