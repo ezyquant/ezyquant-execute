@@ -311,6 +311,8 @@ class ExecuteContext:
         if volume == 0:
             return
 
+        logger.info(f"Place order: {side} {symbol} {volume} {price}")
+
         res = self._settrade_equity.place_order(
             symbol=symbol,
             side=side,
