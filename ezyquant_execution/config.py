@@ -1,0 +1,4 @@
+import os
+
+SETTRADE_ENVIRONMENT = os.getenv("SETTRADE_ENVIRONMENT")
+SETTRADE_COMMISSIION = float(os.getenv("SETTRADE_COMMISSIION", default=0.0025))  # 0.25%

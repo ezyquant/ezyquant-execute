@@ -163,13 +163,19 @@ class TestExecuteContextSymbol:
         print(actual)
 
     def test_is_buy_sufficient(self, exe_ctx_symbol: ExecuteContextSymbol):
-        actual = exe_ctx_symbol.is_buy_sufficient(
-            volume=100, price=60.0, pct_commission=0.01
-        )
+        actual = exe_ctx_symbol.is_buy_sufficient(volume=100, price=60.0)
         print(actual)
 
     def test_is_sell_sufficient(self, exe_ctx_symbol: ExecuteContextSymbol):
         actual = exe_ctx_symbol.is_sell_sufficient(volume=100)
+        print(actual)
+
+    def test_max_buy_volume(self, exe_ctx_symbol: ExecuteContextSymbol):
+        actual = exe_ctx_symbol.max_buy_volume(price=60.0)
+        print(actual)
+
+    def test_max_sell_volume(self, exe_ctx_symbol: ExecuteContextSymbol):
+        actual = exe_ctx_symbol.max_sell_volume()
         print(actual)
 
     def test_get_portfolio(self, exe_ctx_symbol: ExecuteContextSymbol):
@@ -202,7 +208,7 @@ class TestPlaceOrderMode:
         with pytest.raises(SettradeError) as e:
             exe_ctx_symbol.place_order(
                 side="Sell",
-                volume=10000,
+                volume=250000,
                 price_type="MP-MTL",
                 mode="none",
             )
@@ -213,17 +219,17 @@ class TestPlaceOrderMode:
         with pytest.raises(ValueError) as e:
             exe_ctx_symbol.place_order(
                 side="Sell",
-                volume=10000,
+                volume=250000,
                 price_type="MP-MTL",
                 mode="raise",
             )
-        pattern = r"Sell 10000 is not sufficient"
+        pattern = r"Sell 250000 is not sufficient"
         e.match(pattern)
 
     def test_skip(self, exe_ctx_symbol: ExecuteContextSymbol):
         actual = exe_ctx_symbol.place_order(
             side="Sell",
-            volume=10000,
+            volume=250000,
             price_type="MP-MTL",
             mode="skip",
         )
@@ -233,7 +239,7 @@ class TestPlaceOrderMode:
     def test_available(self, exe_ctx_symbol: ExecuteContextSymbol):
         actual = exe_ctx_symbol.place_order(
             side="Sell",
-            volume=10000,
+            volume=250000,
             price_type="MP-MTL",
             mode="available",
         )
