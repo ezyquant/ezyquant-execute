@@ -13,7 +13,4 @@ def set_settrade_environment(environment):
 
 
 if cfg.SETTRADE_ENVIRONMENT:
-    logger.info(
-        f"Found SETTRADE_ENVIRONMENT in environment variable. Setting SETTRADE_ENVIRONMENT to {cfg.SETTRADE_ENVIRONMENT}"
-    )
     set_settrade_environment(cfg.SETTRADE_ENVIRONMENT)
