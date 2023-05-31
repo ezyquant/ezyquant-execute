@@ -10,6 +10,7 @@ from settrade_v2.market import MarketData
 from settrade_v2.realtime import RealtimeDataConnection
 from settrade_v2.user import Investor, MarketRep, _BaseUser
 
+from . import config as cfg
 from . import utils
 from .entity import (
     PRICE_TYPE,
@@ -549,9 +550,7 @@ class ExecuteContextSymbol(ExecuteContext):
     Validate order functions
     """
 
-    def is_buy_sufficient(
-        self, volume: float, price: float, pct_commission: float = 0.0
-    ) -> bool:
+    def is_buy_sufficient(self, volume: float, price: float = 0.0) -> bool:
         """Check if the line available is sufficient for buy order.
 
         Parameters
@@ -563,7 +562,7 @@ class ExecuteContextSymbol(ExecuteContext):
         pct_commission: float
             percentage of commission example 0.01 for 1%
         """
-        return self.line_available >= volume * price * (1 + pct_commission)
+        return self.max_buy_volume(price) >= volume
 
     def is_sell_sufficient(self, volume: float) -> bool:
         """Check if the volume is sufficient for sell order.
@@ -573,7 +572,24 @@ class ExecuteContextSymbol(ExecuteContext):
         volume: float
             volume
         """
-        return self.current_volume >= volume
+        return self.max_sell_volume() >= volume
+
+    def max_buy_volume(self, price: float = 0.0) -> float:
+        """Get maximum buy volume.
+
+        Parameters
+        ----------
+        price: float
+            price
+        """
+        # If price_type is not limit, price is not required.
+        if not price:
+            price = self.best_ask_price
+        return self.line_available / price / (1 + cfg.SETTRADE_COMMISSIION)
+
+    def max_sell_volume(self) -> float:
+        """Get maximum sell volume."""
+        return self.current_volume
 
     """
     Settrade SDK functions
@@ -621,6 +637,10 @@ class ExecuteContextSymbol(ExecuteContext):
         ----------
         side: SIDE_TYPE
             Buy or sell
+        volume: float
+            volume to buy or sell. Will round to 100.
+        price: float
+            price to buy or sell. Must be 0 if price_type is Market.
         ...
         mode: PLACE_ORDER_MODE_TYPE
             none: no check
@@ -632,22 +652,19 @@ class ExecuteContextSymbol(ExecuteContext):
 
         if mode != "none":
             if side == SIDE_BUY:
-                if price == 0:
-                    max_volume = self.line_available / self.best_ask_price
-                else:
-                    max_volume = self.line_available / price
+                max_vol = self.max_buy_volume(price)
             else:
-                max_volume = self.current_volume
+                max_vol = self.max_sell_volume()
 
-            if max_volume < volume:
+            if max_vol < volume:
                 if mode == "skip":
                     logger.warn(f"{side} {volume} is not sufficient")
                     return
                 elif mode == "raise":
                     raise ValueError(f"{side} {volume} is not sufficient")
                 elif mode == "available":
-                    logger.info(f"{side} {volume} is not sufficient use {max_volume}")
-                    volume = max_volume
+                    logger.info(f"{side} {volume} is not sufficient use {max_vol}")
+                    volume = max_vol
                     is_round_up_volume = False
                 else:
                     raise ValueError(f"Invalid mode {mode}")
