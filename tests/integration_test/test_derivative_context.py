@@ -5,13 +5,6 @@ from ezyquant_execution.derivative_context import ExecuteDerivativeContext
 
 from .conftest import D_MKT_ACCOUNT_NO
 
-settrade_user = MarketRep(
-    app_id="e06ViFUJrZsp7pg6",
-    app_secret="GGD8YCW9vMYwa8PzQ+r2UQkZGmstZ6Xyw2T6YgYHsxI=",
-    app_code="IC_ORDER",
-    broker_id="025",
-)
-
 
 @pytest.fixture
 def exe_ctx(stt_mkt: MarketRep):
