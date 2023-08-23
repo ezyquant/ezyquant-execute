@@ -3,6 +3,7 @@ settrade-v2>=2.1,<2.2
 
 # Dev
 pytest>=7,<8
+pytest-env>=1.0.0,<1.1
 pytest-kwparametrize>=0,<1
 isort>=5,<6
 black>=22,<23
