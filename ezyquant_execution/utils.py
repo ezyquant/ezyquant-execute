@@ -196,18 +196,14 @@ def match_tick_price(price: float, n_tick: int, is_round_up: bool = False) -> fl
 
 
 def match_tick_price_buy(price: float, n_tick: int) -> float:
-    """
-    more slip = higher buy price = easier to buy
-    return match_tick_price(price=price, n_tick=n_tick, is_round_up=True)
-    """
+    """More slip = higher buy price = easier to buy return
+    match_tick_price(price=price, n_tick=n_tick, is_round_up=True)"""
     return match_tick_price(price=price, n_tick=n_tick, is_round_up=True)
 
 
 def match_tick_price_sell(price: float, n_tick: int) -> float:
-    """
-    more slip = lower sell price = easier to sell
-    return match_tick_price(price=price, n_tick=-n_tick, is_round_up=False)
-    """
+    """More slip = lower sell price = easier to sell return
+    match_tick_price(price=price, n_tick=-n_tick, is_round_up=False)"""
     return match_tick_price(price=price, n_tick=-n_tick, is_round_up=False)
 
 
