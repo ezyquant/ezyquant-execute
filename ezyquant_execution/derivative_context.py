@@ -151,7 +151,7 @@ class ExecuteDerivativeContext:
 
     @property
     def port_value(self) -> float:
-        """Total portfolio value."""
+        """Total portfolio value. (equity value)"""
         return self.get_account_info().equity
 
     @property
@@ -308,7 +308,6 @@ class ExecuteDerivativeContext:
         trigger_session: Optional[TRIGGER_SESSION] = None,
         bypass_warning: Optional[bool] = True,
     ) -> Optional[DerivativeOrder]:
-
         logger.info(f"Place order: {side} {symbol} {volume} {price}")
 
         res = self._settrade_derivative.place_order(
@@ -394,72 +393,116 @@ class ExecuteDerivativeContextSymbol(ExecuteDerivativeContext):
     Position functions
     """
 
-    # @property
-    # def volume(self) -> float:
-    #     """Actual volume."""
-    #     return self.actual_volume
+    @property
+    def volume(self) -> float:
+        """Actual volume of Long and Short positions."""
+        return self.actual_long_volume + self.actual_short_volume
 
-    # @property
-    # def actual_volume(self) -> float:
-    #     """Actual volume. return 0.0 if no position.
+    @property
+    def actual_long_volume(self) -> float:
+        """The Actual number of shares remaining. return 0.0 if no position."""
+        ps = self.get_portfolio()
+        return ps.actual_long_position if ps else 0
 
-    #     Actual volume will **not** reduce when order is placed.
-    #     """
-    #     ps = self.get_portfolio()
-    #     return ps.actual_volume if ps else 0
+    @property
+    def actual_short_volume(self) -> float:
+        """The actual number of shares remaining. return 0.0 if no position."""
+        ps = self.get_portfolio()
 
-    # @property
-    # def current_volume(self) -> float:
-    #     """Current volume. return 0.0 if no position.
+        return ps.actual_short_position if ps else 0
 
-    #     Current volume will reduce when order is placed.
-    #     """
-    #     ps = self.get_portfolio()
-    #     return ps.current_volume if ps else 0
+    @property
+    def available_long_volume(self) -> float:
+        """Number of remaining shares that can You can continue with the transaction. return 0.0 if no position."""
+        ps = self.get_portfolio()
+        return ps.available_long_position if ps else 0
 
-    # @property
-    # def cost_price(self) -> float:
-    #     """Cost price.
+    @property
+    def available_short_volume(self) -> float:
+        """Number of remaining shares that can You can continue with the transaction. return 0.0 if no position."""
+        ps = self.get_portfolio()
 
-    #     return 0.0 if no position.
-    #     """
-    #     ps = self.get_portfolio()
-    #     return ps.average_price if ps else 0.0
+        return ps.available_short_position if ps else 0
 
-    # @property
-    # def cost_value(self) -> float:
-    #     """Cost value.
+    @property
+    def long_avg_cost(self) -> float:
+        """Long average cost. return 0.0 if no position."""
+        ps = self.get_portfolio()
+        return ps.long_avg_cost if ps else 0
 
-    #     return 0.0 if no position.
-    #     """
-    #     ps = self.get_portfolio()
-    #     return ps.amount if ps else 0.0
+    @property
+    def short_avg_cost(self) -> float:
+        """Short average cost. return 0.0 if no position."""
+        ps = self.get_portfolio()
+        return ps.short_avg_cost if ps else 0
 
-    # @property
-    # def market_value(self) -> float:
-    #     """Market value of symbol in portfolio.
+    @property
+    def long_avg_price(self) -> float:
+        """Long average price. return 0.0 if no position."""
+        ps = self.get_portfolio()
+        return ps.long_avg_price if ps else 0
 
-    #     return 0.0 if no position.
-    #     """
-    #     ps = self.get_portfolio()
-    #     return ps.market_value if ps else 0.0
+    @property
+    def short_avg_price(self) -> float:
+        """Short average price. return 0.0 if no position."""
+        ps = self.get_portfolio()
+        return ps.short_avg_price if ps else 0
 
-    # @property
-    # def profit(self) -> float:
-    #     """Unrealized Profit (THB).
+    @property
+    def long_market_value(self) -> float:
+        """Long market value. return 0.0 if no position."""
+        ps = self.get_portfolio()
+        return ps.long_market_value if ps else 0
 
-    #     return 0.0 if no position.
-    #     """
-    #     ps = self.get_portfolio()
-    #     return ps.profit if ps else 0.0
+    @property
+    def short_market_value(self) -> float:
+        """Short market value. return 0.0 if no position."""
+        ps = self.get_portfolio()
+        return ps.short_market_value if ps else 0
 
-    # def percent_profit(self) -> float:
-    #     """Unrealized Percent profit. return 0.0 if no position.
+    @property
+    def profit(self) -> float:
+        """Unrealized profit/loss of Long position and Short position (THB).
 
-    #     Example 1.0 = 1% profit.
-    #     """
-    #     ps = self.get_portfolio()
-    #     return ps.percent_profit if ps else 0.0
+        return 0.0 if no position.
+        """
+        return self.long_profit + self.short_profit
+
+    @property
+    def long_profit(self) -> float:
+        """Unrealized profit/loss of Long position order (THB).
+
+        return 0.0 if no position.
+        """
+        ps = self.get_portfolio()
+        return ps.long_unrealize_pl if ps else 0.0
+
+    @property
+    def short_profit(self) -> float:
+        """Unrealized profit/loss of Short position order (THB).
+
+        return 0.0 if no position.
+        """
+        ps = self.get_portfolio()
+        return ps.short_unrealize_pl if ps else 0.0
+
+    @property
+    def percent_long_profit(self) -> float:
+        """Unrealized Percent profit of Long position order.
+
+        return 0.0 if no position.
+        """
+        ps = self.get_portfolio()
+        return ps.long_percent_unrealize_pl if ps else 0.0
+
+    @property
+    def percent_short_profit(self) -> float:
+        """Unrealized Percent profit of Short position order.
+
+        return 0.0 if no position.
+        """
+        ps = self.get_portfolio()
+        return ps.short_percent_unrealize_pl if ps else 0.0
 
     """
     Place order functions
@@ -481,127 +524,13 @@ class ExecuteDerivativeContextSymbol(ExecuteDerivativeContext):
             side=side, position=CLOSE_POSITION, volume=volume, price=price, **kwargs
         )
 
-    # def buy_pct_port(self, pct_port: float, **kwargs) -> Optional[DerivativeOrder]:
-    #     """Buy from the percentage of the portfolio. calculate the buy volume
-    #     by pct_port * port_value / best ask price.
-
-    #     Parameters
-    #     ----------
-    #     pct_port: float
-    #         percentage of the portfolio
-    #     """
-    #     return self.buy_value(self.port_value * pct_port, **kwargs)
-
-    # def buy_value(self, value: int, **kwargs) -> Optional[DerivativeOrder]:
-    #     """Buy from the given value. calculate the buy volume by value / best
-    #     ask price.
-
-    #     Parameters
-    #     ----------
-    #     value: float
-    #         value
-    #     """
-    #     price = self.best_ask_price
-    #     volume = value / price
-    #     return self.buy(volume=volume, price=price, **kwargs)
-
-    # def sell_pct_port(self, pct_port: float, **kwargs) -> Optional[DerivativeOrder]:
-    #     """Sell from the percentage of the portfolio. calculate the sell volume
-    #     by pct_port * port_value / best ask price.
-
-    #     Parameters
-    #     ----------
-    #     pct_port: float
-    #         percentage of the portfolio
-    #     """
-    #     return self.sell_value(self.port_value * pct_port, **kwargs)
-
-    # def sell_value(self, value: float, **kwargs) -> Optional[DerivativeOrder]:
-    #     """Sell from the given value. calculate the sell volume by value / best
-    #     bid price.
-
-    #     Parameters
-    #     ----------
-    #     value: float
-    #         value
-    #     """
-    #     price = self.best_bid_price
-    #     volume = value / price
-    #     return self.sell(volume=volume, price=price, **kwargs)
-
-    # def target_pct_port(self, pct_port: float, **kwargs) -> Optional[DerivativeOrder]:
-    #     """Buy/Sell to make the current position reach the target percentage of
-    #     the portfolio. Calculate the buy/sell volume by compare between the
-    #     best bid/ask price.
-
-    #     Parameters
-    #     ----------
-    #     pct_port: float
-    #         percentage of the portfolio
-    #     """
-    #     return self.target_value(self.port_value * pct_port, **kwargs)
-
-    # def target_value(self, value: float, **kwargs) -> Optional[DerivativeOrder]:
-    #     """Buy/Sell to make the current position reach the target value.
-    #     Calculate the buy/sell volume by compare between the best bid/ask
-    #     price.
-
-    #     Parameters
-    #     ----------
-    #     value: float
-    #         value
-    #     """
-    #     value -= self.market_value
-
-    #     if value > 0:
-    #         return self.buy_value(value, **kwargs)
-    #     else:
-    #         return self.sell_value(-value, **kwargs)
+    # TODO: buy_pct_port, buy_value, sell_pct_port, sell_value, target_pct_port, target_value
 
     # """
     # Validate order functions
     # """
 
-    # def is_buy_sufficient(self, volume: float, price: float = 0.0) -> bool:
-    #     """Check if the line available is sufficient for buy order.
-
-    #     Parameters
-    #     ----------
-    #     volume: float
-    #         volume
-    #     price: float
-    #         price
-    #     pct_commission: float
-    #         percentage of commission example 0.01 for 1%
-    #     """
-    #     return self.max_buy_volume(price) >= volume
-
-    # def is_sell_sufficient(self, volume: float) -> bool:
-    #     """Check if the volume is sufficient for sell order.
-
-    #     Parameters
-    #     ----------
-    #     volume: float
-    #         volume
-    #     """
-    #     return self.max_sell_volume() >= volume
-
-    # def max_buy_volume(self, price: float = 0.0) -> float:
-    #     """Get maximum buy volume.
-
-    #     Parameters
-    #     ----------
-    #     price: float
-    #         price
-    #     """
-    #     # If price_type is not limit, price is not required.
-    #     if not price:
-    #         price = self.best_ask_price
-    #     return self. / price / (1 + cfg.SETTRADE_COMMISSIION)
-
-    # def max_sell_volume(self) -> float:
-    #     """Get maximum sell volume."""
-    #     return self.current_volume
+    # TODO: is_buy_sufficient, is_sell_sufficient, max_buy_volume, max_sell_volume
 
     """
     Settrade SDK functions

@@ -20,7 +20,6 @@ class TestDerivativeExecuteContext:
         print(actual)
 
     def test_successs_get_portfolios(self, exe_ctx: ExecuteDerivativeContext):
-
         actual = exe_ctx.get_portfolios()
         print(actual)
 
@@ -77,4 +76,60 @@ class TestDerivativeExecuteContextSymbol:
             trigger_session=None,
             bypass_warning=True,
         )
+        print(actual)
+
+    def test_volume(self, exe_ctx_symbol: ExecuteDerivativeContextSymbol):
+        actual = exe_ctx_symbol.volume
+        print(actual)
+
+    def test_actual_long_volume(self, exe_ctx_symbol: ExecuteDerivativeContextSymbol):
+        actual = exe_ctx_symbol.actual_long_volume
+        print(actual)
+
+    def test_actual_short_volume(self, exe_ctx_symbol: ExecuteDerivativeContextSymbol):
+        actual = exe_ctx_symbol.actual_short_volume
+        print(actual)
+
+    def test_long_avg_cost(self, exe_ctx_symbol: ExecuteDerivativeContextSymbol):
+        actual = exe_ctx_symbol.long_avg_cost
+        print(actual)
+
+    def test_short_avg_cost(self, exe_ctx_symbol: ExecuteDerivativeContextSymbol):
+        actual = exe_ctx_symbol.short_avg_cost
+        print(actual)
+
+    def test_long_avg_price(self, exe_ctx_symbol: ExecuteDerivativeContextSymbol):
+        actual = exe_ctx_symbol.long_avg_price
+        print(actual)
+
+    def test_short_avg_price(self, exe_ctx_symbol: ExecuteDerivativeContextSymbol):
+        actual = exe_ctx_symbol.short_avg_price
+        print(actual)
+
+    def test_long_market_value(self, exe_ctx_symbol: ExecuteDerivativeContextSymbol):
+        actual = exe_ctx_symbol.long_market_value
+        print(actual)
+
+    def test_short_market_value(self, exe_ctx_symbol: ExecuteDerivativeContextSymbol):
+        actual = exe_ctx_symbol.short_market_value
+        print(actual)
+
+    def test_profit(self, exe_ctx_symbol: ExecuteDerivativeContextSymbol):
+        actual = exe_ctx_symbol.profit
+        print(actual)
+
+    def test_long_profit(self, exe_ctx_symbol: ExecuteDerivativeContextSymbol):
+        actual = exe_ctx_symbol.long_profit
+        print(actual)
+
+    def test_short_profit(self, exe_ctx_symbol: ExecuteDerivativeContextSymbol):
+        actual = exe_ctx_symbol.short_profit
+        print(actual)
+
+    def test_percent_long_profit(self, exe_ctx_symbol: ExecuteDerivativeContextSymbol):
+        actual = exe_ctx_symbol.percent_long_profit
+        print(actual)
+
+    def test_percent_short_profit(self, exe_ctx_symbol: ExecuteDerivativeContextSymbol):
+        actual = exe_ctx_symbol.percent_short_profit
         print(actual)
