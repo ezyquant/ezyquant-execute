@@ -1,5 +1,5 @@
 from threading import Event, Timer
-from typing import Callable, Optional
+from typing import Callable, Dict, Optional
 
 from settrade_v2.realtime import RealtimeDataConnection, Subscriber
 
@@ -62,3 +62,27 @@ class PriceInfoSubscriber(SettradeSubscriber):
     @property
     def data(self) -> PriceInfo:
         return PriceInfo.from_camel_dict(super().data)
+
+
+"""
+Cache function
+"""
+
+bo_sub_dict: Dict[str, BidOfferSubscriber] = {}
+pi_sub_dict: Dict[str, PriceInfoSubscriber] = {}
+
+
+def BidOfferSubscriberCache(
+    symbol: str, rt_conn: RealtimeDataConnection
+) -> BidOfferSubscriber:
+    if symbol not in bo_sub_dict:
+        bo_sub_dict[symbol] = BidOfferSubscriber(symbol=symbol, rt_conn=rt_conn)
+    return bo_sub_dict[symbol]
+
+
+def PriceInfoSubscriberCache(
+    symbol: str, rt_conn: RealtimeDataConnection
+) -> PriceInfoSubscriber:
+    if symbol not in pi_sub_dict:
+        pi_sub_dict[symbol] = PriceInfoSubscriber(symbol=symbol, rt_conn=rt_conn)
+    return pi_sub_dict[symbol]

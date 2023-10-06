@@ -473,7 +473,8 @@ class ExecuteContextSymbol(ExecuteContext):
         return self.place_order(side=SIDE_SELL, volume=volume, price=price, **kwargs)
 
     def buy_pct_port(self, pct_port: float, **kwargs) -> Optional[EquityOrder]:
-        """Buy from the percentage of the portfolio. calculate the buy volume
+        """Buy from the percentage of the portfolio. calculate the buy volume.
+
         by pct_port * port_value / best ask price.
 
         Parameters
@@ -497,7 +498,9 @@ class ExecuteContextSymbol(ExecuteContext):
         return self.buy(volume=volume, price=price, **kwargs)
 
     def sell_pct_port(self, pct_port: float, **kwargs) -> Optional[EquityOrder]:
-        """Sell from the percentage of the portfolio. calculate the sell volume
+        """Sell from the percentage of the portfolio. calculate the sell
+        volume.
+
         by pct_port * port_value / best ask price.
 
         Parameters

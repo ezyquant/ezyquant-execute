@@ -10,7 +10,12 @@ from settrade_v2.market import MarketData
 from settrade_v2.realtime import RealtimeDataConnection
 from settrade_v2.user import Investor, MarketRep, _BaseUser
 
-from ezyquant_execution.realtime import BidOfferSubscriber, PriceInfoSubscriber
+from ezyquant_execution.realtime import (
+    BidOfferSubscriber,
+    BidOfferSubscriberCache,
+    PriceInfoSubscriber,
+    PriceInfoSubscriberCache,
+)
 
 from .derivative_entity import (
     CLOSE_POSITION,
@@ -538,13 +543,13 @@ class ExecuteDerivativeContextSymbol(ExecuteDerivativeContext):
 
     @cached_property
     def _bo_sub(self) -> BidOfferSubscriber:
-        return BidOfferSubscriber(
+        return BidOfferSubscriberCache(
             symbol=self.symbol, rt_conn=self._settrade_realtime_data_connection
         )
 
     @cached_property
     def _po_sub(self) -> PriceInfoSubscriber:
-        return PriceInfoSubscriber(
+        return PriceInfoSubscriberCache(
             symbol=self.symbol, rt_conn=self._settrade_realtime_data_connection
         )
 
