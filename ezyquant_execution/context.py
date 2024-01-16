@@ -10,6 +10,13 @@ from settrade_v2.market import MarketData
 from settrade_v2.realtime import RealtimeDataConnection
 from settrade_v2.user import Investor, MarketRep, _BaseUser
 
+from ezyquant_execution.realtime import (
+    BidOfferSubscriber,
+    BidOfferSubscriberCache,
+    PriceInfoSubscriber,
+    PriceInfoSubscriberCache,
+)
+
 from . import config as cfg
 from . import utils
 from .entity import (
@@ -26,7 +33,6 @@ from .entity import (
     PortfolioResponse,
     StockQuoteResponse,
 )
-from .realtime import BidOfferSubscriber, PriceInfoSubscriber
 
 logger = logging.getLogger(__name__)
 
@@ -603,13 +609,13 @@ class ExecuteContextSymbol(ExecuteContext):
 
     @cached_property
     def _bo_sub(self) -> BidOfferSubscriber:
-        return BidOfferSubscriber(
+        return BidOfferSubscriberCache(
             symbol=self.symbol, rt_conn=self._settrade_realtime_data_connection
         )
 
     @cached_property
     def _po_sub(self) -> PriceInfoSubscriber:
-        return PriceInfoSubscriber(
+        return PriceInfoSubscriberCache(
             symbol=self.symbol, rt_conn=self._settrade_realtime_data_connection
         )
 
