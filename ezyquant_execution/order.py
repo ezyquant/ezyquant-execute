@@ -6,16 +6,10 @@ from functools import cached_property, lru_cache
 from typing import Any, Callable, Dict, List, Literal, Optional, TypeVar, Union
 
 from settrade_v2.context import Context
-# from settrade_v2.equity import InvestorEquity, MarketRepEquity
-# from settrade_v2.market import MarketData
-# from settrade_v2.realtime import RealtimeDataConnection
 from settrade_v2.user import Investor, MarketRep, _BaseUser
 
 logger = logging.getLogger(__name__)
 
-# Override _BaseUser.RealtimeDataConnection
-# because subscribe will error if init RealtimeDataConnection more than once
-# Can remove this line if this issue is fixed
 _BaseUser.RealtimeDataConnection = lru_cache(maxsize=1)(
     _BaseUser.RealtimeDataConnection
 )
@@ -43,15 +37,6 @@ def new_refresh(self):
 Context.refresh = new_refresh
 
 class Order:
-    # def __init__(self, settrade_api_key: str):
-    #     """
-    #     Initialize OrderCancellation with Settrade API credentials
-        
-    #     Args:
-    #         settrade_api_key (str): Your Settrade API key
-    #     """
-    #     self.api = SettradePythonAPI(api_key=settrade_api_key)
-
     def __init__(
         self,
         settrade_user: Union[Investor, MarketRep],
@@ -186,8 +171,6 @@ def test_order_cancellation():
     """
     Test all order cancellation functions
     """
-    # Initialize with your API key
-    # api_key = "thoZEaWEdA1zACUC"
     order_manager = Order()
     
     # Test cancel bid orders
