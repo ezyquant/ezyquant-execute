@@ -1,12 +1,12 @@
 import pandas as pd
 import logging
 import time as t
-from datetime import datetime
 from functools import cached_property, lru_cache
 from typing import Any, Callable, Dict, List, Literal, Optional, TypeVar, Union
 
 from settrade_v2.context import Context
 from settrade_v2.user import Investor, MarketRep, _BaseUser
+from ezyquant import EzyQuant 
 
 logger = logging.getLogger(__name__)
 
@@ -17,22 +17,6 @@ _BaseUser.RealtimeDataConnection = lru_cache(maxsize=1)(
 T = TypeVar("T")
 
 PLACE_ORDER_MODE_TYPE = Literal["none", "skip", "raise", "available"]
-
-settrade_user = Investor(
-    app_id="your_app_id",
-    app_secret="your_app_secret",
-    app_code="your_app_code",
-    broker_id="your_broker_id",
-    is_auto_queue=True
-)
-
-account_no =  "your_account_no"
-pin = "your_pin_no"
-# account_no = "8300116"
-# pin = "111111"
-
-# Use the methods of the Investor class
-equity = Investor.Equity(account_no=account_no)
 
 def new_refresh(self):
     res = self.request(
@@ -47,11 +31,10 @@ def new_refresh(self):
     self.refresh_token = res.json()["refresh_token"]
     self.expired_at = int(t.time()) + res.json()["expires_in"]
 
-
 # Override refresh method
 Context.refresh = new_refresh
 
-class Order:
+class OrderManagement:
     def __init__(
         self,
         account_no: str,
@@ -67,9 +50,10 @@ class Order:
         pin : Optional[str], optional
             PIN. Only for investor.
         """
-        self.settrade_user = settrade_user
+        self.settrade_user = self
         self.account_no = account_no
         self.pin = pin
+        self.ezyquant = EzyQuant(api_key="your_api_key")  # Initialize EzyQuant
 
     def get_active_orders(self) -> pd.DataFrame:
         """
@@ -79,7 +63,7 @@ class Order:
             pd.DataFrame: DataFrame containing active orders
         """
         try:
-            orders = self.api.get_orders(status='ACTIVE')
+            orders = self.ezyquant.get_orders(status='ACTIVE')  # Use EzyQuant
             return pd.DataFrame(orders)
         except Exception as e:
             print(f"Error getting active orders: {str(e)}")
@@ -98,7 +82,7 @@ class Order:
             bid_orders = active_orders[active_orders['side'] == 'BUY']
             
             for _, order in bid_orders.iterrows():
-                result = self.api.cancel_order(order['order_id'])
+                result = self.ezyquant.cancel_order(order['order_id'])  # Use EzyQuant
                 if result.get('status') == 'SUCCESS':
                     cancelled_orders.append(order['order_id'])
                     
@@ -120,7 +104,7 @@ class Order:
             ask_orders = active_orders[active_orders['side'] == 'SELL']
             
             for _, order in ask_orders.iterrows():
-                result = self.api.cancel_order(order['order_id'])
+                result = self.ezyquant.cancel_order(order['order_id'])  # Use EzyQuant
                 if result.get('status') == 'SUCCESS':
                     cancelled_orders.append(order['order_id'])
                     
@@ -145,7 +129,7 @@ class Order:
             below_price_orders = active_orders[active_orders['price'] < price]
             
             for _, order in below_price_orders.iterrows():
-                result = self.api.cancel_order(order['order_id'])
+                result = self.ezyquant.cancel_order(order['order_id'])  # Use EzyQuant
                 if result.get('status') == 'SUCCESS':
                     cancelled_orders.append(order['order_id'])
                     
@@ -170,7 +154,7 @@ class Order:
             above_price_orders = active_orders[active_orders['price'] > price]
             
             for _, order in above_price_orders.iterrows():
-                result = self.api.cancel_order(order['order_id'])
+                result = self.ezyquant.cancel_order(order['order_id'])  # Use EzyQuant
                 if result.get('status') == 'SUCCESS':
                     cancelled_orders.append(order['order_id'])
                     
@@ -178,35 +162,3 @@ class Order:
         except Exception as e:
             print(f"Error cancelling orders above price: {str(e)}")
             return cancelled_orders
-
-# Test functions
-def test_order_cancellation():
-    """
-    Test all order cancellation functions
-    """
-    order_manager = Order()
-    
-    # Test cancel bid orders
-    print("\nTesting cancel bid orders...")
-    cancelled_bids = order_manager.cancel_bid_orders()
-    print(f"Cancelled bid orders: {cancelled_bids}")
-    
-    # Test cancel ask orders
-    print("\nTesting cancel ask orders...")
-    cancelled_asks = order_manager.cancel_ask_orders()
-    print(f"Cancelled ask orders: {cancelled_asks}")
-    
-    # Test cancel orders below price
-    print("\nTesting cancel orders below price...")
-    test_price_below = 50.0
-    cancelled_below = order_manager.cancel_orders_below_price(test_price_below)
-    print(f"Cancelled orders below {test_price_below}: {cancelled_below}")
-    
-    # Test cancel orders above price
-    print("\nTesting cancel orders above price...")
-    test_price_above = 100.0
-    cancelled_above = order_manager.cancel_orders_above_price(test_price_above)
-    print(f"Cancelled orders above {test_price_above}: {cancelled_above}")
-
-if __name__ == "__main__":
-    test_order_cancellation()
