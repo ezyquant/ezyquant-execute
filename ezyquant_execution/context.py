@@ -316,6 +316,7 @@ class ExecuteContext:
         """
         volume = utils.round_100(volume, is_round_up_volume)
         if volume == 0:
+            logger.warning("Volume is 0. Skip place order.")
             return
 
         logger.info(f"Place order: {side} {symbol} {volume} {price}")
