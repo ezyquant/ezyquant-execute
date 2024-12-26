@@ -151,7 +151,7 @@ class ExecuteContext:
 
         Not include commission.
         """
-        return sum(i.price * i.vol for i in self.get_orders(_is_pending_order))
+        return sum(i.price * i.balance for i in self.get_orders(_is_pending_order))
 
     @property
     def port_value(self) -> float:
