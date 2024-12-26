@@ -377,12 +377,12 @@ class ExecuteDerivativeContextSymbol(ExecuteDerivativeContext):
     """
 
     @property
-    def market_price(self) -> Optional[float]:
+    def market_price(self) -> float:
         """Market price.
 
         Return 0 at pre-open session.
         """
-        return self._po_sub.data.last
+        return self.get_quote_symbol().last
 
     @property
     def best_bid_price(self) -> float:
