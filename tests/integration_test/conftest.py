@@ -7,11 +7,14 @@ MKT_APP_CODE = "IC_ORDER"
 BROKER_ID = "025"
 PIN = "111111"
 
+# fin-mme-t,123456aB
+# https://itptest.settrade.com/login.jsp?txtBrokerId=025
 INV_APP_ID = "CfVAuVWUwcP1grkG"
 INV_APP_SECRET = "AOGH4Zavk0basf6tliHvf1kJuzECnpyoRRiMGpcVEX3O"
 E_INV_ACCOUNT_NO = "8300116"
 
-# finnix-v
+# finnix-v,It12345
+# https://apptest.settrade.com/mktrep/login?brokerId=025
 MKT_APP_ID = "e06ViFUJrZsp7pg6"
 MKT_APP_SECRET = "GGD8YCW9vMYwa8PzQ+r2UQkZGmstZ6Xyw2T6YgYHsxI="
 D_MKT_ACCOUNT_NO = "156745-0"
@@ -38,5 +41,5 @@ def stt_mkt() -> MarketRep:
 
 
 @pytest.fixture
-def stt_rt(stt_inv: Investor) -> RealtimeDataConnection:
-    return stt_inv.RealtimeDataConnection()
+def stt_rt(stt_mkt: MarketRep) -> RealtimeDataConnection:
+    return stt_mkt.RealtimeDataConnection()

@@ -2,7 +2,7 @@ import inspect
 from dataclasses import dataclass
 from typing import Any, Dict, List, Literal, Optional
 
-import pandas as pd
+from tabulate import tabulate
 
 from . import utils
 
@@ -198,18 +198,14 @@ class BidOffer:
     def best_ask_volume(self):
         return self.asks[0].volume
 
-    @property
-    def dataframe(self):
-        data = {
+    def __str__(self):
+        table = {
             "bid_volume": [i.volume for i in self.bids],
             "bid_price": [i.price for i in self.bids],
             "ask_price": [i.price for i in self.asks],
             "ask_volume": [i.volume for i in self.asks],
         }
-        return pd.DataFrame(data)
-
-    def __str__(self):
-        return self.dataframe.to_string()
+        return tabulate(table, headers="keys", tablefmt="pretty")
 
     @classmethod
     def from_dict(cls, data: dict):
