@@ -25,7 +25,7 @@ setup(
     maintainer="Fintech (Thailand) Company Limited",
     maintainer_email="admin@fintech.co.th",
     python_requires=">=3.8",
-    install_requires=["settrade-v2>=2.1,<2.2", "numpy>=2.0", "tabulate>=0.9.0"],
+    install_requires=["settrade-v2>=2.1,<2.2", "numpy>=1.0", "tabulate>=0.9.0"],
     license="The MIT License (MIT)",
     classifiers=[
         "Intended Audience :: Financial and Insurance Industry",
