@@ -1,10 +1,9 @@
-import inspect
 from dataclasses import dataclass
 from typing import Any, Dict, List, Literal
 
 import pandas as pd
 
-from . import utils
+from ezyquant_execution.entity import SettradeStruct
 
 # ORDER AND TRADE
 SIDE_LONG = "Long"
@@ -54,19 +53,6 @@ MARKET_STATUS_DISPLAY_TYPE = Literal[
     "Circuit Breaker",
     "Full Halt",
 ]
-
-
-class SettradeStruct:
-    @classmethod
-    def from_camel_dict(cls, dct: dict):
-        snake_dct = {utils.camel_to_snake(k): v for k, v in dct.items()}
-        return cls(
-            **{
-                k: v
-                for k, v in snake_dct.items()
-                if k in inspect.signature(cls).parameters
-            }
-        )
 
 
 @dataclass
@@ -447,7 +433,7 @@ class DerivativeOrder(SettradeStruct):
     trigger_price: float
     """Trigger price for stop order"""
     trigger_session: TRIGGER_SESSION  # Nullable field
-    """Trigger session (required if triggerCondition = SESSION): 
+    """Trigger session (required if triggerCondition = SESSION):
     * 'Pre-Open1' - Pre Open before Morning Session and Day Session
     * 'Open1' - Morning Session
     * 'Day' - Day Session (for non-intermission product e.g. RSS, RSS3D)

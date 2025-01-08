@@ -132,13 +132,8 @@ class SettradeStruct:
     @classmethod
     def from_camel_dict(cls, dct: dict):
         snake_dct = {utils.camel_to_snake(k): v for k, v in dct.items()}
-        return cls(
-            **{
-                k: v
-                for k, v in snake_dct.items()
-                if k in inspect.signature(cls).parameters
-            }
-        )
+        params = inspect.signature(cls).parameters
+        return cls(**{k: v for k, v in snake_dct.items() if k in params})
 
 
 @dataclass
