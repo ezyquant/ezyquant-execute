@@ -205,7 +205,7 @@ class ExecuteContext:
         if not order_no_list:
             return []
 
-        logger.info(f"Cancel orders {self.account_no} {order_no_list}")
+        logger.info(f"Cancel orders {self.account_no} {len(order_no_list)} orders")
 
         res = self._settrade_equity.cancel_orders(
             order_no_list=order_no_list, **self._pin_acc_no_kw
