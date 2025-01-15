@@ -205,6 +205,8 @@ class ExecuteContext:
         if not order_no_list:
             return []
 
+        logger.info(f"Cancel orders {self.account_no} {order_no_list}")
+
         res = self._settrade_equity.cancel_orders(
             order_no_list=order_no_list, **self._pin_acc_no_kw
         )
@@ -319,7 +321,7 @@ class ExecuteContext:
             logger.warning("Volume is 0. Skip place order.")
             return
 
-        logger.info(f"Place order: {side} {symbol} {volume} {price}")
+        logger.info(f"Place order {self.account_no} {side} {symbol} {volume} {price}")
 
         res = self._settrade_equity.place_order(
             symbol=symbol,
