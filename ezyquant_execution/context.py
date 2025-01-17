@@ -146,12 +146,12 @@ class ExecuteContext:
         return self.get_portfolios().total_portfolio.market_value
 
     @property
-    def pending_order_value(self) -> float:
+    def pending_buy_order_value(self) -> float:
         """Sum of all pending order value.
 
         Not include commission.
         """
-        return sum(i.price * i.balance for i in self.get_orders(_is_pending_order))
+        return sum(i.price * i.balance for i in self.get_orders(_is_pending_buy_order))
 
     @property
     def port_value(self) -> float:
@@ -159,7 +159,9 @@ class ExecuteContext:
 
         Line available + Total market value + Pending order value
         """
-        return self.line_available + self.total_market_value + self.pending_order_value
+        return (
+            self.line_available + self.total_market_value + self.pending_buy_order_value
+        )
 
     @property
     def cash(self) -> float:
@@ -713,3 +715,7 @@ def _is_pending_order(order: EquityOrder) -> bool:
     return order.balance > 0 and "Expired" not in order.show_order_status
     # return order.can_cancel # This not work because GTC order can't cancel after market close
     # return order.balance > 0 # This not work because Expired order still have balance > 0
+
+
+def _is_pending_buy_order(order: EquityOrder) -> bool:
+    return _is_pending_order(order) and order.side == SIDE_BUY

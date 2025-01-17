@@ -33,8 +33,8 @@ class TestExecuteContext:
         actual = exe_ctx.total_market_value
         print(actual)
 
-    def test_pending_order_value(self, exe_ctx: ExecuteContext):
-        actual = exe_ctx.pending_order_value
+    def test_pending_buy_order_value(self, exe_ctx: ExecuteContext):
+        actual = exe_ctx.pending_buy_order_value
         print(actual)
 
     def test_port_value(self, exe_ctx: ExecuteContext):

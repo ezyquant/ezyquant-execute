@@ -146,14 +146,6 @@ class ExecuteDerivativeContext:
         """
         return self.get_portfolios().total_portfolio.market_value
 
-    # @property
-    # def pending_order_value(self) -> float:
-    #     """Sum of all pending order value.
-
-    #     Not include commission.
-    #     """
-    #     return sum(i.price * i.vol for i in self.get_orders(_is_pending_order))
-
     @property
     def port_value(self) -> float:
         """Total portfolio value. (equity value)"""
@@ -644,9 +636,3 @@ class ExecuteDerivativeContextSymbol(ExecuteDerivativeContext):
         return super()._filter_list(
             l, lambda x: x.symbol == self.symbol and condition(x)
         )
-
-
-def _is_pending_order(order: DerivativeOrder) -> bool:
-    return order.balance_qty > 0 and "Expired" not in order.show_status
-    # return order.can_cancel # This not work because GTC order can't cancel after market close
-    # return order.balance > 0 # This not work because Expired order still have balance > 0
